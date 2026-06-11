@@ -1,0 +1,14 @@
+{
+  "extends": "@mint-pay/tsconfig/nestjs.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "incremental": false,
+    "types": ["node", "jest"],
+    "paths": {
+      "@mint-pay/types": ["../../packages/types/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["test", "dist", "node_modules"]
+}

@@ -1,0 +1,193 @@
+import { plainToInstance, Transform } from 'class-transformer';
+import {
+  IsBoolean,
+  IsEnum,
+  IsHexadecimal,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Length,
+  Min,
+  MinLength,
+  validateSync,
+} from 'class-validator';
+
+export enum NodeEnv {
+  Development = 'development',
+  Production = 'production',
+  Test = 'test',
+}
+
+export enum MoneroNetwork {
+  Stagenet = 'stagenet',
+  Mainnet = 'mainnet',
+}
+
+export enum RateProvider {
+  Cmc = 'cmc',
+}
+
+const toInt = ({ value }: { value: unknown }): number =>
+  typeof value === 'number' ? value : parseInt(String(value), 10);
+
+const toBool = ({ value }: { value: unknown }): boolean => {
+  if (typeof value === 'boolean') return value;
+  return String(value).toLowerCase() === 'true';
+};
+
+export class EnvironmentVariables {
+  // --- App ---
+  @IsEnum(NodeEnv)
+  @IsOptional()
+  NODE_ENV: NodeEnv = NodeEnv.Development;
+
+  @Transform(toInt)
+  @IsInt()
+  @IsOptional()
+  PORT: number = 3000;
+
+  // --- Mongo ---
+  @IsString()
+  MONGO_URI!: string;
+
+  @IsString()
+  @IsOptional()
+  MONGO_DB_NAME: string = 'monero_payments';
+
+  // --- Monero network ---
+  @IsEnum(MoneroNetwork)
+  @IsOptional()
+  MONERO_NETWORK: MoneroNetwork = MoneroNetwork.Stagenet;
+
+  // --- monerod ---
+  @IsUrl({ require_tld: false, require_protocol: true })
+  MONERO_DAEMON_URI!: string;
+
+  @IsString()
+  MONERO_DAEMON_USER!: string;
+
+  @IsString()
+  MONERO_DAEMON_PASSWORD!: string;
+
+  // --- Wallet (view-only, in-process MoneroWalletFull) ---
+  // If the wallet file exists at MONERO_WALLET_PATH, it is opened.
+  // Otherwise, MONERO_VIEW_KEY + MONERO_PRIMARY_ADDRESS + MONERO_RESTORE_HEIGHT
+  // are required to create a view-only wallet. Service enforces this at boot.
+  @IsString()
+  MONERO_WALLET_PATH!: string;
+
+  @IsHexadecimal()
+  @Length(64, 64)
+  @IsOptional()
+  MONERO_VIEW_KEY?: string;
+
+  @IsString()
+  @IsOptional()
+  MONERO_PRIMARY_ADDRESS?: string;
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  MONERO_RESTORE_HEIGHT?: number;
+
+  // --- Pricing ---
+  @IsEnum(RateProvider)
+  @IsOptional()
+  RATE_PROVIDER: RateProvider = RateProvider.Cmc;
+
+  @IsString()
+  CMC_API_KEY!: string;
+
+  @IsUrl({ require_tld: true, require_protocol: true })
+  @IsOptional()
+  CMC_BASE_URL: string = 'https://pro-api.coinmarketcap.com';
+
+  // --- API auth ---
+  @IsString()
+  @MinLength(16)
+  API_KEY!: string;
+
+  @IsString()
+  @MinLength(16)
+  ADMIN_API_KEY!: string;
+
+  // --- Webhooks ---
+  @IsString()
+  WEBHOOK_SIGNING_SECRET!: string;
+
+  // --- Tunable defaults (seed values; live values stored in Mongo Settings doc) ---
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  CONFIRMATION_DEPTH: number = 1;
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(60)
+  @IsOptional()
+  INVOICE_DEFAULT_EXPIRY_SEC: number = 20 * 60;
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(60)
+  @IsOptional()
+  INVOICE_MAX_EXPIRY_SEC: number = 30 * 60;
+
+  @Transform(toInt)
+  @IsInt()
+  @IsOptional()
+  SCANNER_INTERVAL_MS: number = 10_000;
+
+  @Transform(toInt)
+  @IsInt()
+  @IsOptional()
+  SCANNER_LOCK_TTL_MS: number = 30_000;
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  MONERO_SYNCED_THRESHOLD_BLOCKS: number = 2;
+
+  @Transform(toBool)
+  @IsBoolean()
+  @IsOptional()
+  MONERO_PREWARM_SYNC: boolean = true;
+
+  @Transform(toInt)
+  @IsInt()
+  @IsOptional()
+  RATE_CACHE_TTL_MS: number = 45_000;
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  WEBHOOK_MAX_ATTEMPTS: number = 8;
+
+  @Transform(toInt)
+  @IsInt()
+  @IsOptional()
+  WEBHOOK_DISPATCH_INTERVAL_MS: number = 5_000;
+
+  @Transform(toInt)
+  @IsInt()
+  @IsOptional()
+  WEBHOOK_TIMEOUT_MS: number = 10_000;
+}
+
+export const validateEnv = (
+  config: Record<string, unknown>,
+): EnvironmentVariables => {
+  const validated = plainToInstance(EnvironmentVariables, config, {
+    enableImplicitConversion: false,
+  });
+  const errors = validateSync(validated, { skipMissingProperties: false });
+  if (errors.length > 0) {
+    throw new Error(`Invalid environment:\n${errors.toString()}`);
+  }
+  return validated;
+};

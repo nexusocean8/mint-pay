@@ -1,0 +1,53 @@
+services:
+  mint_admin:
+    container_name: mint_admin
+    image: code.nexusocean.org/vincent/mint-admin:latest
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET}
+      XMR_API_URL: ${XMR_API_URL}
+      XMR_ADMIN_KEY: ${XMR_ADMIN_KEY}
+      XMR_API_KEY: ${XMR_API_KEY}
+    depends_on:
+      - mint_api
+    networks:
+      - mint_net
+
+  mint_api:
+    container_name: mint_api
+    image: code.nexusocean.org/vincent/mint-api:latest
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+    env_file:
+      - .env
+    environment:
+      PORT: 8080
+      NODE_ENV: production
+      XMR_DAEMON_URI: http://monerod:38081
+      MONGO_URI: mongodb://mongo:27017/mintpay
+    depends_on:
+      - mongo
+    networks:
+      - mint_net
+
+  mongo:
+    container_name: mint_mongo
+    image: mongo:8
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - mint_net
+
+volumes:
+  mongo_data:
+
+networks:
+  mint_net:
+    driver: bridge
+    name: mint_net
