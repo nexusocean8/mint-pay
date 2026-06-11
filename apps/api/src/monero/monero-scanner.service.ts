@@ -8,8 +8,8 @@ import {
   Chain,
 } from '../invoices/schemas/invoice.schema';
 import { Payment, PaymentDocument } from '../payments/schemas/payment.schema';
-import { MoneroService } from '../monero/monero.service';
-import { ScannerLockService } from './scanner-lock.service';
+import { MoneroService } from './monero.service';
+import { ScannerLockService } from '../scanner/scanner-lock.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { WebhookEvent } from '../webhooks/schemas/webhook-delivery.schema';
 import type { MoneroIncomingTransfer } from 'monero-ts';
@@ -25,8 +25,8 @@ const NON_TERMINAL: InvoiceStatus[] = [
 const ACCOUNT_INDEX = 0;
 
 @Injectable()
-export class ScannerService {
-  private readonly log = new Logger(ScannerService.name);
+export class MoneroScannerService {
+  private readonly log = new Logger(MoneroScannerService.name);
   private running = false;
 
   constructor(

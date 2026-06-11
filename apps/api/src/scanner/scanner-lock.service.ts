@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { randomUUID } from 'crypto';
@@ -13,7 +13,6 @@ import {
  */
 @Injectable()
 export class ScannerLockService {
-  private readonly log = new Logger(ScannerLockService.name);
   private readonly owner = randomUUID();
 
   constructor(
