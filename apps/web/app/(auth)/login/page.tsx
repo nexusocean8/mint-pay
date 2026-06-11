@@ -16,10 +16,14 @@ export default function LoginPage() {
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    api
-      .get('/auth/status')
-      .then((r) => setMode(r.data.registered ? 'login' : 'register'))
-      .catch(() => setMode('login'));
+    (async () => {
+      try {
+        const { data } = await api.get('/auth/status');
+        setMode(data.registered ? 'login' : 'register');
+      } catch {
+        setMode('login');
+      }
+    })();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -53,7 +57,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-zinc-950">
       <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-lg p-8 space-y-6">
         <div>
-          <p className="text-xs font-semibold tracking-widest text-orange-400 uppercase mb-1">
+          <p className="text-xs font-semibold tracking-widest text-green-400 uppercase mb-1">
             Payments Admin
           </p>
           <h1 className="text-xl font-semibold text-zinc-100">
@@ -75,7 +79,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-orange-400 transition-colors"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-green-400 transition-colors"
             />
           </div>
 
@@ -89,7 +93,7 @@ export default function LoginPage() {
               autoComplete={
                 mode === 'login' ? 'current-password' : 'new-password'
               }
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-orange-400 transition-colors"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-green-400 transition-colors"
             />
           </div>
 
@@ -98,7 +102,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={pending}
-            className="w-full bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md px-4 py-2 transition-colors"
+            className="w-full bg-green-500 hover:bg-green-400 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md px-4 py-2 transition-colors"
           >
             {pending
               ? mode === 'login'

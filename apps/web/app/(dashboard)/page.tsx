@@ -11,8 +11,10 @@ interface HealthResponse {
   synced: HealthSynced;
 }
 
-function fetchHealth(chain: string): Promise<HealthResponse> {
-  return api.get('/health', { params: { chain } }).then((r) => r.data);
+async function fetchHealth(chain: string): Promise<HealthResponse> {
+  const { data } = await api.get('/health', { params: { chain } });
+
+  return data;
 }
 
 export default function OverviewPage() {
@@ -36,7 +38,7 @@ export default function OverviewPage() {
         <StatusCard label="Ready" status={ready?.status} loading={isLoading} />
         <StatusCard
           label="Syncing"
-          status={Boolean(synced?.status) ?  "ok": "no"}
+          status={Boolean(synced?.status) ? 'ok' : 'no'}
           loading={isLoading}
         />
       </div>
@@ -68,10 +70,7 @@ export default function OverviewPage() {
                 label="Daemon height"
                 value={synced.daemonHeight.toLocaleString()}
               />
-              <Stat
-              label="Blocks behind"
-              value={`${synced.behind}`}
-              />
+              <Stat label="Blocks behind" value={`${synced.behind}`} />
             </div>
             <SyncBar
               walletHeight={synced.walletHeight}
@@ -81,22 +80,16 @@ export default function OverviewPage() {
         </Section>
       )}
 
-      {synced && chain === 'evm' && (
+      {synced && chain !== 'xmr' && (
         <Section title="Node Status">
           <div className="grid grid-cols-2 gap-4">
             <Stat
               label="Sync status"
               value={synced.status === 'ok' ? 'Synced' : 'Syncing'}
             />
-            <Stat
-              label="Block height"
-              value={synced.behind.toLocaleString()}
-            />
+            <Stat label="Block height" value={synced.behind.toLocaleString()} />
           </div>
-            <SyncBar
-              walletHeight={synced.behind}
-              daemonHeight={synced.behind}
-            />
+          <SyncBar walletHeight={synced.behind} daemonHeight={synced.behind} />
         </Section>
       )}
     </div>
@@ -185,7 +178,7 @@ function SyncBar({
       </div>
       <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
         <div
-          className="h-full bg-orange-500 rounded-full transition-all duration-500"
+          className="h-full bg-green-500 rounded-full transition-all duration-500"
           style={{ width: `${pct}%` }}
         />
       </div>

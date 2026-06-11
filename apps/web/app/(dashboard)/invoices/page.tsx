@@ -30,16 +30,15 @@ const STATUS_STYLES: Record<InvoiceStatus, string> = {
   cancelled: 'bg-red-900 text-red-300',
 };
 
-function fetchInvoices(
+async function fetchInvoices(
   chain: string,
   status: string | null,
   page: number,
 ): Promise<InvoiceListResponse> {
-  return api
-    .get('/invoices', {
-      params: { chain, ...(status ? { status } : {}), page, limit: LIMIT },
-    })
-    .then((r) => r.data);
+  const { data } = await api.get('/invoices', {
+    params: { chain, ...(status ? { status } : {}), page, limit: LIMIT },
+  });
+  return data;
 }
 
 function formatAtomic(

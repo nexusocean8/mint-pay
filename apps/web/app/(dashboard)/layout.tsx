@@ -62,8 +62,8 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         `}
       >
         <div className="px-5 py-5 border-b border-zinc-800 flex items-center justify-between">
-          <span className="text-sm font-semibold tracking-widest text-orange-400 uppercase">
-            Payments Admin
+          <span className="text-sm font-semibold tracking-widest text-green-400 uppercase">
+            Mint Payments
           </span>
           <button
             onClick={() => setOpen(false)}
@@ -85,7 +85,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
                 onClick={() => setChain(c.value)}
                 className={`flex-1 py-1.5 text-xs font-medium transition-colors ${
                   chain === c.value
-                    ? 'bg-orange-500 text-white'
+                    ? 'bg-green-500 text-white'
                     : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
                 }`}
               >
@@ -129,7 +129,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
           >
             <Menu size={20} />
           </button>
-          <span className="text-sm font-semibold tracking-widest text-orange-400 uppercase">
+          <span className="text-sm font-semibold tracking-widest text-green-400 uppercase">
             Payments Admin
           </span>
         </header>

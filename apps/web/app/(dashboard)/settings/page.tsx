@@ -51,8 +51,8 @@ export default function SettingsPage() {
   }, [data]);
 
   const mutation = useMutation({
-    mutationFn: (values: Settings) =>
-      api.put('/settings', values, { params: { chain } }).then((r) => r.data),
+    mutationFn: async (values: Settings) =>
+      await api.put('/settings', values, { params: { chain } }),
     onSuccess: (updated) => {
       queryClient.setQueryData(['settings', chain], updated);
       setSaved(true);
@@ -89,7 +89,7 @@ export default function SettingsPage() {
           <button
             onClick={() => mutation.mutate(draft)}
             disabled={!dirty || mutation.isPending}
-            className="px-4 py-1.5 text-sm bg-orange-500 hover:bg-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-md transition-colors"
+            className="px-4 py-1.5 text-sm bg-green-500 hover:bg-green-400 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-md transition-colors"
           >
             {mutation.isPending ? 'Saving…' : 'Save'}
           </button>
@@ -99,7 +99,7 @@ export default function SettingsPage() {
       <div className="bg-zinc-900 border border-zinc-800 rounded-lg divide-y divide-zinc-800">
         {FIELDS.map(({ key, label, unit }) => {
           const fieldLabel =
-            key === 'syncedThresholdBlocks' && chain === 'evm'
+            key === 'syncedThresholdBlocks' && chain !== 'xmr'
               ? 'Sync threshold'
               : label;
           return (
@@ -112,7 +112,7 @@ export default function SettingsPage() {
                   type="number"
                   value={draft[key]}
                   onChange={(e) => handleChange(key, e.target.value)}
-                  className="w-36 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1.5 text-sm font-mono text-zinc-100 focus:outline-none focus:border-orange-400 transition-colors"
+                  className="w-36 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1.5 text-sm font-mono text-zinc-100 focus:outline-none focus:border-green-400 transition-colors"
                 />
                 <span className="text-xs text-zinc-500">{unit}</span>
               </div>

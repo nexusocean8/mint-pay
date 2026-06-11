@@ -6,46 +6,36 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-// Server-side: XMR service
-export const xmrApi = axios.create();
-xmrApi.interceptors.request.use((config) => {
-  config.baseURL = process.env.XMR_API_URL ?? 'http://localhost:3000/v1';
-  config.headers['X-Admin-Api-Key'] = process.env.XMR_ADMIN_KEY ?? '';
-  config.headers['X-Api-Key'] = process.env.XMR_API_KEY ?? '';
+// Server-side: Mint service
+export const mintApi = axios.create();
+mintApi.interceptors.request.use((config) => {
+  config.baseURL = process.env.MINT_API_URL ?? 'http://localhost:8080/v1';
+  config.headers['X-Admin-Api-Key'] = process.env.MINT_ADMIN_KEY ?? '';
+  config.headers['X-Api-Key'] = process.env.MINT_API_KEY ?? '';
   return config;
 });
 
-// Server-side: EVM service
-export const evmApi = axios.create();
-evmApi.interceptors.request.use((config) => {
-  config.baseURL = process.env.EVM_API_URL ?? 'http://localhost:3001/v1';
-  config.headers['X-Admin-Api-Key'] = process.env.EVM_ADMIN_KEY ?? '';
-  config.headers['X-Api-Key'] = process.env.EVM_API_KEY ?? '';
-  return config;
-});
-
-export type Chain = 'xmr' | 'evm';
+export type Chain = 'xmr';
 
 export function getChainApi(chain: Chain) {
   switch (chain) {
-    case 'evm':
-      return evmApi;
     case 'xmr':
     default:
-      return xmrApi;
+      return mintApi;
   }
 }
 
-export function resolveChain(param: string | null | undefined): Chain {
-  return param === 'evm' ? 'evm' : 'xmr';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function resolveChain(_param: string | null | undefined): Chain {
+  return 'xmr';
 }
 
-export function getAuthApi(chain?: Chain) {
-  return chain === 'evm' ? evmApi : xmrApi;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function getAuthApi(_chain?: Chain) {
+  return mintApi;
 }
 
 // Types
-
 export type InvoiceStatus =
   | 'pending'
   | 'seen'
@@ -96,16 +86,7 @@ export interface XmrWalletInfo {
   synced: boolean;
 }
 
-export interface EvmWalletInfo {
-  chain: 'evm';
-  treasuryAddress: string;
-  network: string;
-  walletEnabled: boolean;
-  blockHeight: number;
-  synced: boolean;
-}
-
-export type WalletInfo = XmrWalletInfo | EvmWalletInfo;
+export type WalletInfo = XmrWalletInfo;
 
 export interface HealthCheck {
   ok: boolean;
@@ -122,7 +103,7 @@ export interface HealthSynced {
   walletHeight: number;
   daemonHeight: number;
   behind: number;
-  head?: string
+  head?: string;
 }
 
 export interface Settings {

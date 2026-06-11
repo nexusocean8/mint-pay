@@ -8,7 +8,10 @@ import axios from 'axios';
 export default function ProfilePage() {
   const { data: me } = useQuery({
     queryKey: ['me'],
-    queryFn: () => api.get('/auth/me').then((r) => r.data),
+    queryFn: async () => {
+      const { data } = await api.get('/auth/me');
+      return data;
+    },
   });
 
   const [email, setEmail] = useState('');
@@ -62,7 +65,7 @@ export default function ProfilePage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-orange-400 transition-colors"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-green-400 transition-colors"
             />
           </div>
 
@@ -74,7 +77,7 @@ export default function ProfilePage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-orange-400 transition-colors"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-green-400 transition-colors"
             />
           </div>
 
@@ -88,7 +91,7 @@ export default function ProfilePage() {
               onChange={(e) => setNewPassword(e.target.value)}
               autoComplete="new-password"
               minLength={8}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-orange-400 transition-colors"
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-green-400 transition-colors"
             />
           </div>
 
@@ -100,7 +103,7 @@ export default function ProfilePage() {
           <button
             type="submit"
             disabled={pending}
-            className="w-full bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md px-4 py-2 transition-colors"
+            className="w-full bg-green-500 hover:bg-green-400 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md px-4 py-2 transition-colors"
           >
             {pending ? 'Saving…' : 'Save changes'}
           </button>

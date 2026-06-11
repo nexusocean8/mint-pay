@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api, type WalletInfo, type XmrWalletInfo, type EvmWalletInfo } from '@/lib/api';
+import { api, type WalletInfo, type XmrWalletInfo } from '@/lib/api';
 import { useChain } from '@/lib/chain-context';
 import { Copy, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 
-function fetchWallet(chain: string): Promise<WalletInfo> {
-  return api.get('/wallet', { params: { chain } }).then((r) => r.data);
+async function fetchWallet(chain: string): Promise<WalletInfo> {
+  const { data } = await api.get('/wallet', { params: { chain } });
+
+  return data;
 }
 
 export default function WalletPage() {
@@ -19,11 +21,10 @@ export default function WalletPage() {
   });
 
   if (isLoading) return <p className="text-sm text-zinc-500">Loading…</p>;
-  if (!data) return <p className="text-sm text-red-400">Failed to load wallet info</p>;
+  if (!data)
+    return <p className="text-sm text-red-400">Failed to load wallet info</p>;
 
-  return chain === 'xmr'
-    ? <XmrWallet data={data as XmrWalletInfo} />
-    : <EvmWallet data={data as EvmWalletInfo} />;
+  return chain === 'xmr' ? <XmrWallet data={data as XmrWalletInfo} /> : <></>;
 }
 
 function XmrWallet({ data }: { data: XmrWalletInfo }) {
@@ -35,35 +36,35 @@ function XmrWallet({ data }: { data: XmrWalletInfo }) {
       </div>
 
       <Section title="Keys & Identity">
-        <Field label="Primary Address" value={data.primaryAddress} mono copyable />
+        <Field
+          label="Primary Address"
+          value={data.primaryAddress}
+          mono
+          copyable
+        />
         <Field label="View Key" value={data.viewKey} mono copyable masked />
-        <Field label="Restore Height" value={data.restoreHeight.toLocaleString()} mono />
+        <Field
+          label="Restore Height"
+          value={data.restoreHeight.toLocaleString()}
+          mono
+        />
       </Section>
-    </div>
-  );
-}
-
-function EvmWallet({ data }: { data: EvmWalletInfo }) {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-zinc-100">Wallet — ETH</h1>
-        <Badge ok={data.walletEnabled}>{data.walletEnabled ? 'Enabled' : 'Disabled'}</Badge>
-      </div>
-
-      <Section title="Identity">
-        <Field label="Treasury Address" value={data.treasuryAddress} mono copyable />
-        <Field label="Network" value={data.network} />
-      </Section>
-
     </div>
   );
 }
 
 function Field({
-  label, value, mono = false, copyable = false, masked = false,
+  label,
+  value,
+  mono = false,
+  copyable = false,
+  masked = false,
 }: {
-  label: string; value: string; mono?: boolean; copyable?: boolean; masked?: boolean;
+  label: string;
+  value: string;
+  mono?: boolean;
+  copyable?: boolean;
+  masked?: boolean;
 }) {
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -78,19 +79,33 @@ function Field({
 
   return (
     <div className="flex gap-4 py-2.5 border-b border-zinc-800 last:border-0 items-start">
-      <span className="text-xs text-zinc-500 w-36 shrink-0 pt-0.5">{label}</span>
-      <span className={`text-xs ${mono ? 'font-mono' : ''} text-zinc-200 break-all flex-1`}>
+      <span className="text-xs text-zinc-500 w-36 shrink-0 pt-0.5">
+        {label}
+      </span>
+      <span
+        className={`text-xs ${mono ? 'font-mono' : ''} text-zinc-200 break-all flex-1`}
+      >
         {display}
       </span>
       <div className="flex items-center gap-2 shrink-0">
         {masked && (
-          <button onClick={() => setRevealed((r) => !r)} className="text-zinc-500 hover:text-zinc-200 transition-colors">
+          <button
+            onClick={() => setRevealed((r) => !r)}
+            className="text-zinc-500 hover:text-zinc-200 transition-colors"
+          >
             {revealed ? <EyeOff size={13} /> : <Eye size={13} />}
           </button>
         )}
         {copyable && (
-          <button onClick={copy} className="text-zinc-500 hover:text-zinc-200 transition-colors">
-            {copied ? <CheckCircle size={13} className="text-emerald-400" /> : <Copy size={13} />}
+          <button
+            onClick={copy}
+            className="text-zinc-500 hover:text-zinc-200 transition-colors"
+          >
+            {copied ? (
+              <CheckCircle size={13} className="text-emerald-400" />
+            ) : (
+              <Copy size={13} />
+            )}
           </button>
         )}
       </div>
@@ -98,7 +113,13 @@ function Field({
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 space-y-1">
       <h2 className="text-sm font-medium text-zinc-400 mb-3">{title}</h2>
@@ -109,9 +130,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Badge({ ok, children }: { ok: boolean; children: React.ReactNode }) {
   return (
-    <span className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full ${
-      ok ? 'bg-emerald-900/50 text-emerald-400' : 'bg-yellow-900/50 text-yellow-400'
-    }`}>
+    <span
+      className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full ${
+        ok
+          ? 'bg-emerald-900/50 text-emerald-400'
+          : 'bg-yellow-900/50 text-yellow-400'
+      }`}
+    >
       {ok ? <CheckCircle size={12} /> : <XCircle size={12} />}
       {children}
     </span>

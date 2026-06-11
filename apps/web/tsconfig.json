@@ -2,6 +2,7 @@
   "extends": "@mint-pay/tsconfig/nextjs.json",
   "compilerOptions": {
     "plugins": [{ "name": "next" }],
+    "incremental": false,
     "paths": {
       "@/*": ["./*"],
       "@mint-pay/types": ["../../packages/types/index.ts"]

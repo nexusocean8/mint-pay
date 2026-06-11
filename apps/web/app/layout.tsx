@@ -6,9 +6,9 @@ import Providers from '@/components/Providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Payments Admin',
-  description: 'Payment administration dashboard',
-  robots: {follow: false, index: false}
+  title: 'Mint Payments',
+  description: 'Mint Payments Dashboard',
+  robots: { follow: false, index: false },
 };
 
 export default function RootLayout({
