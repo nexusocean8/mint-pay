@@ -47,6 +47,9 @@ importers:
       '@nestjs/swagger':
         specifier: ^11.4.4
         version: 11.4.4(@nestjs/common@11.1.26(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.26)(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)
+      '@nexusocean/firo-rpc':
+        specifier: ^0.4.0
+        version: 0.4.0
       argon2:
         specifier: ^0.44.0
         version: 0.44.0
@@ -1256,6 +1259,10 @@ packages:
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
+
+  '@nexusocean/firo-rpc@0.4.0':
+    resolution: {integrity: sha512-57naKWHHRrES3IYIkaf6JTd66XoXfyUFZVNSjDJvODf6lgHYjQ/NltnQOSZytLCjU3nCaYN9W6lmy/m8FnMeBQ==}
+    engines: {node: '>=24'}
 
   '@noble/hashes@1.8.0':
     resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
@@ -6290,6 +6297,13 @@ snapshots:
 
   '@next/swc-win32-x64-msvc@16.2.6':
     optional: true
+
+  '@nexusocean/firo-rpc@0.4.0':
+    dependencies:
+      axios: 1.17.0
+    transitivePeerDependencies:
+      - debug
+      - supports-color
 
   '@noble/hashes@1.8.0': {}
 

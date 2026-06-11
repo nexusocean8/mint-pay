@@ -16,11 +16,14 @@ import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { InvoiceResponseDto } from './dto/invoice-response.dto';
 import { PriceService } from '../price/price.service';
 import { MoneroService } from '../monero/monero.service';
+import { FiroService } from '../firo/firo.service';
 import { SettingsService } from '../settings/settings.service';
+import BigNumber from 'bignumber.js';
 
-const CHAIN = Chain.Xmr;
-const ASSET = Asset.Xmr;
-const ASSET_DECIMALS = 12;
+const CHAIN_CONFIG = {
+  [Chain.Xmr]: { asset: Asset.Xmr, decimals: 12, symbol: 'XMR' },
+  [Chain.Firo]: { asset: Asset.Firo, decimals: 8, symbol: 'FIRO' },
+} as const;
 
 @Injectable()
 export class InvoicesService {
@@ -31,6 +34,7 @@ export class InvoicesService {
     private readonly invoices: Model<InvoiceDocument>,
     private readonly price: PriceService,
     private readonly monero: MoneroService,
+    private readonly firo: FiroService,
     private readonly settings: SettingsService,
   ) {}
 
@@ -46,17 +50,20 @@ export class InvoicesService {
       );
     }
 
+    const chain = dto.chain;
+    const { asset, decimals, symbol } = CHAIN_CONFIG[chain];
     const fiatCurrency = (dto.fiatCurrency ?? 'USD').toUpperCase();
 
-    // Record fiat equivalent at lock time (informational).
     let amountFiat = 0;
     let rate = 0;
     let rateLockedAt = new Date();
     try {
-      const quote = await this.price.getQuote(fiatCurrency);
-      const xmr = Number(BigInt(dto.amountAtomic)) / 10 ** ASSET_DECIMALS;
-      amountFiat = xmr * quote.fiatPerXmr;
-      rate = quote.xmrPerFiat;
+      const quote = await this.price.getQuote(symbol, fiatCurrency);
+      const units = new BigNumber(dto.amountAtomic).dividedBy(
+        new BigNumber(10).pow(decimals),
+      );
+      amountFiat = units.multipliedBy(quote.fiatPerAsset).toNumber();
+      rate = quote.assetPerFiat;
       rateLockedAt = quote.fetchedAt;
     } catch (err) {
       this.log.warn(
@@ -64,17 +71,18 @@ export class InvoicesService {
       );
     }
 
-    const sub = await this.monero.createSubaddress(
-      `invoice:${rateLockedAt.toISOString()}`,
+    const { address, addressIndex } = await this.resolveAddress(
+      chain,
+      rateLockedAt,
     );
     const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
     const created = await this.invoices.create({
-      chain: CHAIN,
-      asset: ASSET,
-      assetDecimals: ASSET_DECIMALS,
-      address: sub.address,
-      addressIndex: sub.index,
+      chain,
+      asset,
+      assetDecimals: decimals,
+      address,
+      addressIndex,
       amountAtomic: dto.amountAtomic,
       amountFiat,
       fiatCurrency,
@@ -93,9 +101,24 @@ export class InvoicesService {
     if (!isValidObjectId(id)) {
       throw new NotFoundException('Invoice not found');
     }
-    const inv = await this.invoices.findOne({ _id: id, chain: CHAIN }).exec();
+    const inv = await this.invoices.findById(id).exec();
     if (!inv) throw new NotFoundException('Invoice not found');
     return this.toResponse(inv);
+  }
+
+  private async resolveAddress(
+    chain: Chain,
+    rateLockedAt: Date,
+  ): Promise<{ address: string; addressIndex: number }> {
+    if (chain === Chain.Xmr) {
+      const sub = await this.monero.createSubaddress(
+        `invoice:${rateLockedAt.toISOString()}`,
+      );
+      return { address: sub.address, addressIndex: sub.index };
+    }
+    // Firo hotwallet — addressIndex is not meaningful but kept for schema consistency
+    const address = await this.firo.getNewAddress();
+    return { address, addressIndex: 0 };
   }
 
   private toResponse(inv: InvoiceDocument): InvoiceResponseDto {

@@ -12,12 +12,12 @@ export enum InvoiceStatus {
 
 export enum Chain {
   Xmr = 'xmr',
-  Evm = 'evm',
+  Firo = 'firo',
 }
 
 export enum Asset {
   Xmr = 'xmr',
-  Eth = 'eth',
+  Firo = 'firo',
 }
 
 export type InvoiceDocument = HydratedDocument<Invoice>;

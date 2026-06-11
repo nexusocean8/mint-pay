@@ -71,9 +71,6 @@ export class EnvironmentVariables {
   MONERO_DAEMON_PASSWORD!: string;
 
   // --- Wallet (view-only, in-process MoneroWalletFull) ---
-  // If the wallet file exists at MONERO_WALLET_PATH, it is opened.
-  // Otherwise, MONERO_VIEW_KEY + MONERO_PRIMARY_ADDRESS + MONERO_RESTORE_HEIGHT
-  // are required to create a view-only wallet. Service enforces this at boot.
   @IsString()
   MONERO_WALLET_PATH!: string;
 
@@ -91,6 +88,30 @@ export class EnvironmentVariables {
   @Min(0)
   @IsOptional()
   MONERO_RESTORE_HEIGHT?: number;
+
+  // --- Firo RPC ---
+  @IsString()
+  FIRO_RPC_HOST!: string;
+
+  @Transform(toInt)
+  @IsInt()
+  FIRO_RPC_PORT!: number;
+
+  @IsString()
+  FIRO_RPC_USER!: string;
+
+  @IsString()
+  FIRO_RPC_PASS!: string;
+
+  @IsString()
+  @IsOptional()
+  FIRO_RPC_PROTOCOL: string = 'http';
+
+  @Transform(toInt)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  FIRO_CONFIRMATION_DEPTH: number = 1;
 
   // --- Pricing ---
   @IsEnum(RateProvider)

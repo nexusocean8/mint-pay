@@ -727,10 +727,19 @@
       "CreateInvoiceDto": {
         "type": "object",
         "properties": {
+          "chain": {
+            "type": "string",
+            "example": "xmr",
+            "description": "Chain to create the invoice on",
+            "enum": [
+              "xmr",
+              "firo"
+            ]
+          },
           "amountAtomic": {
             "type": "string",
             "example": "123456789012",
-            "description": "Amount owed in atomic units (string, BigInt-compatible). Piconero for XMR (1 XMR = 10^12)."
+            "description": "Amount owed in atomic units (string, BigInt-compatible). Piconero for XMR (1 XMR = 10^12), satoshi for FIRO (1 FIRO = 10^8)."
           },
           "fiatCurrency": {
             "type": "string",
@@ -765,6 +774,7 @@
           }
         },
         "required": [
+          "chain",
           "amountAtomic"
         ]
       },
@@ -779,7 +789,7 @@
             "type": "string",
             "enum": [
               "xmr",
-              "evm"
+              "firo"
             ],
             "example": "xmr"
           },
@@ -787,7 +797,7 @@
             "type": "string",
             "enum": [
               "xmr",
-              "eth"
+              "firo"
             ],
             "example": "xmr"
           },

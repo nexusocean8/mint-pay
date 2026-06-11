@@ -1,8 +1,8 @@
 export interface PriceQuote {
-  /** XMR per 1 unit of fiat */
-  xmrPerFiat: number;
-  /** Fiat per 1 XMR */
-  fiatPerXmr: number;
+  /** Asset per 1 unit of fiat */
+  assetPerFiat: number;
+  /** Fiat per 1 asset */
+  fiatPerAsset: number;
   fiatCurrency: string;
   fetchedAt: Date;
   source: string;

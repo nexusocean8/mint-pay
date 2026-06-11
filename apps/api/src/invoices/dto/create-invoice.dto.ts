@@ -7,14 +7,24 @@ import {
   Min,
   IsObject,
   Matches,
+  IsEnum,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Chain } from '../schemas/invoice.schema';
 
 export class CreateInvoiceDto {
   @ApiProperty({
+    example: Chain.Xmr,
+    description: 'Chain to create the invoice on',
+    enum: Chain,
+  })
+  @IsEnum(Chain)
+  chain!: Chain;
+
+  @ApiProperty({
     example: '123456789012',
     description:
-      'Amount owed in atomic units (string, BigInt-compatible). Piconero for XMR (1 XMR = 10^12).',
+      'Amount owed in atomic units (string, BigInt-compatible). Piconero for XMR (1 XMR = 10^12), satoshi for FIRO (1 FIRO = 10^8).',
   })
   @IsString()
   @Matches(/^[1-9][0-9]*$/, {

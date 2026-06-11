@@ -9,9 +9,6 @@ import { SettingsService } from '../settings/settings.service';
 import { RATE_PROVIDER, type RateProvider } from './rate-provider.interface';
 import type { PriceQuote } from './price.types';
 
-const XMR_SYMBOL = 'XMR';
-const PICONERO_PER_XMR = new BigNumber('1e12');
-
 @Injectable()
 export class PriceService {
   private readonly log = new Logger(PriceService.name);
@@ -22,8 +19,11 @@ export class PriceService {
     private readonly settings: SettingsService,
   ) {}
 
-  async getQuote(fiatCurrency: string): Promise<PriceQuote> {
-    const key = fiatCurrency.toUpperCase();
+  async getQuote(
+    assetSymbol: string,
+    fiatCurrency: string,
+  ): Promise<PriceQuote> {
+    const key = `${assetSymbol.toUpperCase()}:${fiatCurrency.toUpperCase()}`;
     const ttl = this.settings.get('rateCacheTtlMs');
     const cached = this.cache.get(key);
     if (cached && Date.now() - cached.fetchedAt.getTime() < ttl) {
@@ -31,12 +31,15 @@ export class PriceService {
     }
 
     try {
-      const fiatPerXmr = await this.rates.getRate(XMR_SYMBOL, key);
-      const xmrPerFiat = new BigNumber(1).dividedBy(fiatPerXmr).toNumber();
+      const fiatPerAsset = await this.rates.getRate(
+        assetSymbol.toUpperCase(),
+        fiatCurrency.toUpperCase(),
+      );
+      const assetPerFiat = new BigNumber(1).dividedBy(fiatPerAsset).toNumber();
       const fresh: PriceQuote = {
-        fiatPerXmr,
-        xmrPerFiat,
-        fiatCurrency: key,
+        fiatPerAsset,
+        assetPerFiat,
+        fiatCurrency: fiatCurrency.toUpperCase(),
         fetchedAt: new Date(),
         source: this.rates.source,
       };
@@ -53,23 +56,19 @@ export class PriceService {
     }
   }
 
-  /**
-   * Convert a fiat amount to piconero using a locked quote.
-   * Rounds up so the merchant never under-collects due to truncation.
-   */
-  convertFiatToPiconero(
+  convertFiatToAtomic(
     amountFiat: number | string,
     quote: PriceQuote,
+    decimals: number,
   ): string {
     const amount = new BigNumber(amountFiat);
     if (amount.isNaN() || amount.isLessThanOrEqualTo(0)) {
       throw new Error('amountFiat must be > 0');
     }
-    const xmrPerFiat = new BigNumber(quote.xmrPerFiat);
-    const piconero = amount
-      .multipliedBy(xmrPerFiat)
-      .multipliedBy(PICONERO_PER_XMR)
+    const atomic = amount
+      .multipliedBy(new BigNumber(quote.assetPerFiat))
+      .multipliedBy(new BigNumber(10).pow(decimals))
       .integerValue(BigNumber.ROUND_UP);
-    return piconero.toFixed(0);
+    return atomic.toFixed(0);
   }
 }

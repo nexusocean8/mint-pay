@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
@@ -69,9 +69,9 @@ async function bootstrap() {
 
   const port = config.get('PORT', { infer: true });
   await app.listen(port);
-  Logger.log(`Listening on port: ${port}`, 'Bootstrap');
+  console.log(`Listening on port: ${port}`, 'Bootstrap');
   if (nodeEnv !== 'production') {
-    Logger.log(`Swagger UI: http://localhost:${port}/docs`, 'Bootstrap');
+    console.log(`Swagger UI: http://localhost:${port}/docs`, 'Bootstrap');
   }
 }
 

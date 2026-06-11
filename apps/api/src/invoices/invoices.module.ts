@@ -5,6 +5,7 @@ import { InvoicesService } from './invoices.service';
 import { Invoice, InvoiceSchema } from './schemas/invoice.schema';
 import { PriceModule } from '../price/price.module';
 import { MoneroModule } from '../monero/monero.module';
+import { FiroModule } from '../firo/firo.module';
 import { AuthModule } from '../auth/auth.module';
 import { SettingsModule } from '../settings/settings.module';
 
@@ -13,6 +14,7 @@ import { SettingsModule } from '../settings/settings.module';
     MongooseModule.forFeature([{ name: Invoice.name, schema: InvoiceSchema }]),
     PriceModule,
     MoneroModule,
+    FiroModule,
     AuthModule,
     SettingsModule,
   ],

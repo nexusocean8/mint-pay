@@ -11,6 +11,7 @@ import { AdminModule } from './admin/admin.module';
 import { HealthModule } from './health/health.module';
 import { SettingsModule } from './settings/settings.module';
 import { AppController } from './app.controller';
+import { FiroModule } from './firo/firo.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AppController } from './app.controller';
     AppConfigModule,
     DatabaseModule,
     MoneroModule,
+    FiroModule,
     AuthModule,
     PriceModule,
     InvoicesModule,
