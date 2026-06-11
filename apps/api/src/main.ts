@@ -11,9 +11,7 @@ import { join } from 'path';
 
 const isProd = process.env.NODE_ENV === 'production';
 
-const origins = isProd
-  ? ['http://localhost:3000', 'http://mint_admin:3000']
-  : true;
+const origins = isProd ? true : 'http://localhost:3000';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {

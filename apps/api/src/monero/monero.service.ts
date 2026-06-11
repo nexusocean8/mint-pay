@@ -56,7 +56,7 @@ export class MoneroService implements OnApplicationBootstrap {
 
     const prewarm = this.config.get('MONERO_PREWARM_SYNC', { infer: true });
     if (prewarm) {
-      this.logger.log(
+      this.logger.debug(
         'Pre-warming wallet sync (may take a while on first boot)...',
       );
       const listener = new SyncProgressListener((m) => this.logger.log(m));
@@ -67,7 +67,7 @@ export class MoneroService implements OnApplicationBootstrap {
         await this.wallet.removeListener(listener);
       }
       const height = await this.wallet.getHeight();
-      this.logger.log(`Pre-warm sync complete at height ${height}`);
+      this.logger.debug(`Pre-warm sync complete at height ${height}`);
     }
   }
 

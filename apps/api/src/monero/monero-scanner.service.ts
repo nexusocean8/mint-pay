@@ -67,9 +67,10 @@ export class MoneroScannerService {
     await this.monero.sync();
 
     // 2. Process active invoices.
-    const active = await this.invoices
-      .find({ chain: CHAIN, status: { $in: NON_TERMINAL } })
-      .exec();
+    const active = await this.invoices.find({
+      chain: CHAIN,
+      status: { $in: NON_TERMINAL },
+    });
 
     if (active.length === 0) {
       await this.expireStale();

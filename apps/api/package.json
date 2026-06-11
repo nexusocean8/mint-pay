@@ -8,12 +8,12 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "node dist/main",
+    "start": "node dist/src/main",
     "dev": "nest start -b swc -w",
     "debug": "nest start --debug --watch",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest --config ./test/jest-e2e.json",
-    "prepare": "husky"
+    "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
     "@mint-pay/types": "workspace:*",
@@ -59,7 +59,6 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
     "globals": "^17.6.0",
-    "husky": "^9.1.7",
     "jest": "^30.4.2",
     "source-map-support": "^0.5.21",
     "supertest": "^7.2.2",

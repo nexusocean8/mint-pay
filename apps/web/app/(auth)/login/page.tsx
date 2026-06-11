@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import axios from 'axios';
 
-type Mode = 'loading' | 'login' | 'register';
+type Mode = 'loading' | 'login' | 'register' | 'error';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function LoginPage() {
         const { data } = await api.get('/auth/status');
         setMode(data.registered ? 'login' : 'register');
       } catch {
-        setMode('login');
+        setMode('error');
       }
     })();
   }, []);
@@ -49,6 +49,16 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-950">
         <p className="text-sm text-zinc-500">Loading…</p>
+      </div>
+    );
+  }
+
+  if (mode === 'error') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+        <p className="text-sm text-red-400">
+          Service unavailable. Please try again later.
+        </p>
       </div>
     );
   }

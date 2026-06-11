@@ -5,13 +5,15 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "start": "next start -p 3000",
+    "lint": "eslint",
+    "clean": "rm -rf .next node_modules"
   },
   "dependencies": {
     "@mint-pay/types": "workspace:*",
     "@tanstack/react-query": "^5.100.14",
     "axios": "^1.16.1",
+    "jiti": "^2.7.0",
     "jose": "^6.2.3",
     "lucide-react": "^1.17.0",
     "next": "16.2.6",
