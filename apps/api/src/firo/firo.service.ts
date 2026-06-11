@@ -11,7 +11,7 @@ export class FiroService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     try {
       const height = await this.client.getBlockCount();
-      this.log.log(`Firo RPC connected — tip height: ${height}`);
+      this.log.debug(`Firo RPC connected — tip height: ${height}`);
     } catch (err) {
       this.log.error(`Firo RPC connection failed: ${(err as Error).message}`);
     }

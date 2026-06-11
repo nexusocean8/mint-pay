@@ -110,8 +110,8 @@ export class FiroScannerService {
 
     const known = await this.payments
       .find({ chain: CHAIN, invoiceId: inv._id }, { txHash: 1 })
-      .lean()
-      .exec();
+      .lean();
+
     const knownKeys = new Set(known.map((p) => p.txHash));
 
     let changed = false;
@@ -150,22 +150,21 @@ export class FiroScannerService {
       if (blockHash) {
         const block = await this.firo.getBlockWithChainlock(blockHash);
         const conf = tipHeight - block.height + 1;
-        const res = await this.payments
-          .updateMany(
-            {
-              chain: CHAIN,
-              invoiceId: inv._id,
-              txHash: { $regex: `^${txid}:` },
+        const res = await this.payments.updateMany(
+          {
+            chain: CHAIN,
+            invoiceId: inv._id,
+            txHash: { $regex: `^${txid}:` },
+          },
+          {
+            $set: {
+              confirmations: conf,
+              blockHeight: block.height,
+              ...(conf >= 1 ? { confirmedAt: new Date() } : {}),
             },
-            {
-              $set: {
-                confirmations: conf,
-                blockHeight: block.height,
-                ...(conf >= 1 ? { confirmedAt: new Date() } : {}),
-              },
-            },
-          )
-          .exec();
+          },
+        );
+
         if (res.modifiedCount > 0) changed = true;
       }
     }
@@ -225,7 +224,7 @@ export class FiroScannerService {
     const statusChanged = nextStatus !== inv.status;
     updates.status = nextStatus;
 
-    await this.invoices.updateOne({ _id: inv._id }, { $set: updates }).exec();
+    await this.invoices.updateOne({ _id: inv._id }, { $set: updates });
 
     if (statusChanged && webhookEvent && inv.webhookUrl) {
       await this.webhooks.enqueue(inv._id, inv.webhookUrl, webhookEvent, {
@@ -251,12 +250,11 @@ export class FiroScannerService {
     });
 
     for (const inv of stale) {
-      const res = await this.invoices
-        .updateOne(
-          { _id: inv._id, status: InvoiceStatus.Pending },
-          { $set: { status: InvoiceStatus.Expired } },
-        )
-        .exec();
+      const res = await this.invoices.updateOne(
+        { _id: inv._id, status: InvoiceStatus.Pending },
+        { $set: { status: InvoiceStatus.Expired } },
+      );
+
       if (res.modifiedCount > 0 && inv.webhookUrl) {
         await this.webhooks.enqueue(
           inv._id,

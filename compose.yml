@@ -6,12 +6,12 @@ services:
     ports:
       - 3000:3000
     environment:
-      PORT: 3000
-      NODE_ENV: production
-      JWT_SECRET: 2d3ab1f118d64005245b71a0c65ad1a97df8f2785178e741ba826fe4f3dac9c0
-      MINT_API_URL: http://mint_api:8080/v1
-      MINT_ADMIN_KEY: a294da8a539b886d7df2f4bb47513d6e
-      MINT_API_KEY: 5ba0339fe7edb3ffb9f37e608587d626
+      PORT:
+      NODE_ENV:
+      JWT_SECRET:
+      MINT_API_URL:
+      MINT_ADMIN_KEY:
+      MINT_API_KEY:
     depends_on:
       - mint_api
     networks:
@@ -44,5 +44,5 @@ volumes:
 
 networks:
   mint_net:
+    driver: bridge
     name: mint_net
-    external: true
