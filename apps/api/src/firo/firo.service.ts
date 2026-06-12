@@ -49,6 +49,6 @@ export class FiroService implements OnModuleInit {
     mnemonicpassphrase?: string;
     hdseed: string;
   }> {
-    return await this.client.call('dumphdinfo', []);
+    return await this.client.call('dumphdinfo');
   }
 }
