@@ -15,7 +15,7 @@ const origins = isProd ? true : 'http://localhost:3000';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: ['error', 'warn', 'debug'],
+    logger: ['error', 'warn', 'debug', 'log'],
   });
 
   app.use(helmet());

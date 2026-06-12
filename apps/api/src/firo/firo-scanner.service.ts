@@ -71,9 +71,10 @@ export class FiroScannerService {
   private async runOnce(): Promise<void> {
     const tipHeight = await this.firo.getBlockCount();
 
-    const active = await this.invoices
-      .find({ chain: CHAIN, status: { $in: NON_TERMINAL } })
-      .exec();
+    const active = await this.invoices.find({
+      chain: CHAIN,
+      status: { $in: NON_TERMINAL },
+    });
 
     if (active.length === 0) {
       await this.expireStale();
@@ -101,12 +102,12 @@ export class FiroScannerService {
     try {
       txids = await this.firo.rpc.getAddressTxIds(inv.address);
     } catch (err) {
-      this.log.warn(
-        `getAddressTxIds failed for ${inv.address}: ${(err as Error).message}`,
-      );
+      this.log.warn(`getAddressTxIds failed for ${inv.address}:${err}`);
       return;
     }
     if (!txids || txids.length === 0) return;
+
+    this.log.log(`Tick: ${txids.length} txid(s) for address=${inv.address}`);
 
     const known = await this.payments
       .find({ chain: CHAIN, invoiceId: inv._id }, { txHash: 1 })
@@ -175,13 +176,12 @@ export class FiroScannerService {
   }
 
   private async recomputeInvoice(invoiceId: Types.ObjectId): Promise<void> {
-    const inv = await this.invoices
-      .findOne({ _id: invoiceId, chain: CHAIN })
-      .exec();
+    const inv = await this.invoices.findOne({ _id: invoiceId, chain: CHAIN });
+
     if (!inv) return;
     if (!NON_TERMINAL.includes(inv.status)) return;
 
-    const pays = await this.payments.find({ chain: CHAIN, invoiceId }).exec();
+    const pays = await this.payments.find({ chain: CHAIN, invoiceId });
     if (pays.length === 0) return;
 
     const required = inv.confirmationsRequired;

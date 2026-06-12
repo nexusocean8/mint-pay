@@ -41,7 +41,7 @@ export class FiroService implements OnModuleInit {
     time: number;
     tx: string[];
   }> {
-    return await this.client.call('getblock', [hash, 1]);
+    return await this.client.call('getblock', hash, 1);
   }
 
   async dumpHdInfo(): Promise<{

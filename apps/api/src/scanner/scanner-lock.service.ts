@@ -25,19 +25,18 @@ export class ScannerLockService {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + ttlMs);
     try {
-      const doc = await this.model
-        .findOneAndUpdate(
-          {
-            name,
-            $or: [
-              { expiresAt: { $lte: now } },
-              { expiresAt: { $exists: false } },
-            ],
-          },
-          { $set: { name, owner: this.owner, expiresAt } },
-          { upsert: true, returnDocument: 'after' },
-        )
-        .exec();
+      const doc = await this.model.findOneAndUpdate(
+        {
+          name,
+          $or: [
+            { expiresAt: { $lte: now } },
+            { expiresAt: { $exists: false } },
+          ],
+        },
+        { $set: { name, owner: this.owner, expiresAt } },
+        { upsert: true, returnDocument: 'after' },
+      );
+
       return doc?.owner === this.owner;
     } catch (err) {
       // Duplicate key on concurrent upsert -> someone else holds it.
