@@ -1,6 +1,8 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { FIRO_CLIENT } from './firo.constants';
 import type { FiroClient } from './firo.constants';
+import { WalletInfoResponseDto } from '../admin/dto/wallet-info.dto';
+import { Chain } from '../invoices/schemas/invoice.schema';
 
 @Injectable()
 export class FiroService implements OnModuleInit {
@@ -50,5 +52,19 @@ export class FiroService implements OnModuleInit {
     hdseed: string;
   }> {
     return await this.client.call('dumphdinfo');
+  }
+
+  async getWalletInfo(): Promise<WalletInfoResponseDto> {
+    const [blockHeight, walletInfo] = await Promise.all([
+      this.getBlockCount(),
+      this.client.getWalletInfo(),
+    ]);
+    return {
+      chain: Chain.Firo,
+      blockHeight,
+      balance: walletInfo.balance,
+      hdMasterKeyId: walletInfo.hdmasterkeyid,
+      keypoolSize: walletInfo.keypoolsize,
+    };
   }
 }

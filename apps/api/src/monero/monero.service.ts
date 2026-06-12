@@ -10,6 +10,8 @@ import type { EnvironmentVariables } from '../config/env.validation';
 import { MONERO_WALLET } from './monero.constants';
 import { SettingsService } from '../settings/settings.service';
 import { MoneroWalletListener } from 'monero-ts';
+import { WalletInfoResponseDto } from '../admin/dto/wallet-info.dto';
+import { Chain } from '../invoices/schemas/invoice.schema';
 
 export interface WalletInfo {
   primaryAddress: string;
@@ -116,7 +118,7 @@ export class MoneroService implements OnApplicationBootstrap {
     return daemonHeight - walletHeight <= threshold;
   }
 
-  async getWalletInfo(): Promise<WalletInfo> {
+  async getWalletInfo(): Promise<WalletInfoResponseDto> {
     const [primaryAddress, viewKey, restoreHeight, walletHeight, daemonHeight] =
       await Promise.all([
         this.wallet.getPrimaryAddress(),
@@ -127,6 +129,7 @@ export class MoneroService implements OnApplicationBootstrap {
       ]);
     const threshold = this.settings.get('syncedThresholdBlocks');
     return {
+      chain: Chain.Xmr,
       primaryAddress,
       viewKey,
       restoreHeight,

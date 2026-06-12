@@ -5,6 +5,7 @@ import {
   ApiSecurity,
   ApiOkResponse,
   ApiUnauthorizedResponse,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { AdminKeyGuard } from '../auth/admin-key.guard';
@@ -13,6 +14,7 @@ import {
   InvoiceListQueryDto,
   InvoiceListResponseDto,
 } from './dto/invoice-list.dto';
+import { Chain } from '../invoices/schemas/invoice.schema';
 
 @ApiTags('admin')
 @ApiSecurity('admin-key')
@@ -25,14 +27,13 @@ export class AdminController {
   constructor(private readonly admin: AdminService) {}
 
   @Get('wallet')
-  @ApiOperation({
-    summary: 'Get wallet info',
-    description:
-      'Returns view-only wallet material (primary address, private view key, restore height) and sync state.',
-  })
+  @ApiOperation({ summary: 'Get wallet info' })
+  @ApiQuery({ name: 'chain', enum: Chain, required: false })
   @ApiOkResponse({ type: WalletInfoResponseDto })
-  getInfo(): Promise<WalletInfoResponseDto> {
-    return this.admin.getWalletInfo();
+  getInfo(
+    @Query('chain') chain: Chain = Chain.Xmr,
+  ): Promise<WalletInfoResponseDto> {
+    return this.admin.getWalletInfo(chain);
   }
 
   @Get('invoices')

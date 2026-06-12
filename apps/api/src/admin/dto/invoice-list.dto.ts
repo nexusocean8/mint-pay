@@ -1,10 +1,15 @@
 import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsInt, IsOptional, Min } from 'class-validator';
 import { Type } from 'class-transformer';
-import { InvoiceStatus } from '../../invoices/schemas/invoice.schema';
+import { Chain, InvoiceStatus } from '../../invoices/schemas/invoice.schema';
 import { InvoiceResponseDto } from '../../invoices/dto/invoice-response.dto';
 
 export class InvoiceListQueryDto {
+  @ApiPropertyOptional({ enum: Chain, default: Chain.Xmr })
+  @IsOptional()
+  @IsEnum(Chain)
+  chain?: Chain = Chain.Xmr;
+
   @ApiPropertyOptional({ enum: InvoiceStatus })
   @IsOptional()
   @IsEnum(InvoiceStatus)

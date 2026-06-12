@@ -1,24 +1,42 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Chain } from '../../invoices/schemas/invoice.schema';
 
 export class WalletInfoResponseDto {
-  @ApiProperty({ example: '5A1...' })
-  primaryAddress!: string;
+  @ApiProperty({ enum: Chain, example: Chain.Xmr })
+  chain!: Chain;
 
-  @ApiProperty({
+  // XMR fields
+  @ApiPropertyOptional({ example: '5A1...' })
+  primaryAddress?: string;
+
+  @ApiPropertyOptional({
     example: 'a1b2c3...64hex',
     description: 'Private view key (read-only; cannot spend funds)',
   })
-  viewKey!: string;
+  viewKey?: string;
 
-  @ApiProperty({ example: 1234567 })
-  restoreHeight!: number;
+  @ApiPropertyOptional({ example: 1234567 })
+  restoreHeight?: number;
 
-  @ApiProperty({ example: 1234890 })
-  walletHeight!: number;
+  @ApiPropertyOptional({ example: 1234890 })
+  walletHeight?: number;
 
-  @ApiProperty({ example: 1234892 })
-  daemonHeight!: number;
+  @ApiPropertyOptional({ example: 1234892 })
+  daemonHeight?: number;
 
-  @ApiProperty({ example: true })
-  synced!: boolean;
+  @ApiPropertyOptional({ example: true })
+  synced?: boolean;
+
+  // Firo fields
+  @ApiPropertyOptional({ example: 1322631 })
+  blockHeight?: number;
+
+  @ApiPropertyOptional({ example: 0.2 })
+  balance?: number;
+
+  @ApiPropertyOptional({ example: 'fdec8781a3c6357dd808379283238a9e649ab5dd' })
+  hdMasterKeyId?: string;
+
+  @ApiPropertyOptional({ example: 100 })
+  keypoolSize?: number;
 }

@@ -15,18 +15,19 @@ mintApi.interceptors.request.use((config) => {
   return config;
 });
 
-export type Chain = 'xmr';
+export type Chain = 'xmr' | 'firo';
 
 export function getChainApi(chain: Chain) {
   switch (chain) {
     case 'xmr':
+    case 'firo':
     default:
       return mintApi;
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function resolveChain(_param: string | null | undefined): Chain {
+export function resolveChain(param: string | null | undefined): Chain {
+  if (param === 'firo') return 'firo';
   return 'xmr';
 }
 
@@ -86,7 +87,15 @@ export interface XmrWalletInfo {
   synced: boolean;
 }
 
-export type WalletInfo = XmrWalletInfo;
+export interface FiroWalletInfo {
+  chain: 'firo';
+  blockHeight: number;
+  balance: number;
+  hdMasterKeyId?: string;
+  keypoolSize: number;
+}
+
+export type WalletInfo = XmrWalletInfo | FiroWalletInfo;
 
 export interface HealthCheck {
   ok: boolean;

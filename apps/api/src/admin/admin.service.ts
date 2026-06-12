@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { MoneroService } from '../monero/monero.service';
+import { FiroService } from '../firo/firo.service';
 import { WalletInfoResponseDto } from './dto/wallet-info.dto';
 import {
   InvoiceListQueryDto,
@@ -13,8 +14,6 @@ import {
   Chain,
 } from '../invoices/schemas/invoice.schema';
 
-const CHAIN = Chain.Xmr;
-
 type LeanInvoice = Invoice & {
   _id: Types.ObjectId;
   createdAt: Date;
@@ -25,18 +24,22 @@ type LeanInvoice = Invoice & {
 export class AdminService {
   constructor(
     private readonly monero: MoneroService,
+    private readonly firo: FiroService,
     @InjectModel(Invoice.name) private invoiceModel: Model<InvoiceDocument>,
   ) {}
 
-  async getWalletInfo(): Promise<WalletInfoResponseDto> {
+  async getWalletInfo(chain: Chain): Promise<WalletInfoResponseDto> {
+    if (chain === Chain.Firo) {
+      return this.firo.getWalletInfo();
+    }
     return this.monero.getWalletInfo();
   }
 
   async listInvoices(
     query: InvoiceListQueryDto,
   ): Promise<InvoiceListResponseDto> {
-    const { status, page = 1, limit = 20 } = query;
-    const filter: Record<string, unknown> = { chain: CHAIN };
+    const { status, page = 1, limit = 20, chain = Chain.Xmr } = query;
+    const filter: Record<string, unknown> = { chain };
     if (status) filter.status = status;
     const skip = (page - 1) * limit;
 

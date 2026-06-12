@@ -7,7 +7,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const chain = resolveChain(req.nextUrl.searchParams.get('chain'));
   try {
-    const { data } = await getChainApi(chain).get('/admin/wallet');
+    const { data } = await getChainApi(chain).get('/admin/wallet', {
+      params: { chain },
+    });
     return NextResponse.json(data);
   } catch {
     return NextResponse.json({ error: 'Upstream error' }, { status: 502 });

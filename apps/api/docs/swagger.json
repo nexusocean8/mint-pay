@@ -338,9 +338,21 @@
     },
     "/v1/admin/wallet": {
       "get": {
-        "description": "Returns view-only wallet material (primary address, private view key, restore height) and sync state.",
         "operationId": "AdminController_getInfo",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "chain",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "xmr",
+                "firo"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -371,6 +383,19 @@
       "get": {
         "operationId": "AdminController_listInvoices",
         "parameters": [
+          {
+            "name": "chain",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "xmr",
+              "type": "string",
+              "enum": [
+                "xmr",
+                "firo"
+              ]
+            }
+          },
           {
             "name": "status",
             "required": false,
@@ -458,9 +483,21 @@
     },
     "/v1/health/ready": {
       "get": {
-        "description": "Checks Mongo, wallet loaded, and daemon reachability.",
         "operationId": "HealthController_ready",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "chain",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "xmr",
+                "firo"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -481,9 +518,21 @@
     },
     "/v1/health/synced": {
       "get": {
-        "description": "Returns ok when wallet height is within the configured sync threshold of daemon tip.",
         "operationId": "HealthController_synced",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "chain",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "xmr",
+                "firo"
+              ]
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -916,6 +965,14 @@
       "WalletInfoResponseDto": {
         "type": "object",
         "properties": {
+          "chain": {
+            "type": "string",
+            "enum": [
+              "xmr",
+              "firo"
+            ],
+            "example": "xmr"
+          },
           "primaryAddress": {
             "type": "string",
             "example": "5A1..."
@@ -940,15 +997,26 @@
           "synced": {
             "type": "boolean",
             "example": true
+          },
+          "blockHeight": {
+            "type": "number",
+            "example": 1322631
+          },
+          "balance": {
+            "type": "number",
+            "example": 0.2
+          },
+          "hdMasterKeyId": {
+            "type": "string",
+            "example": "fdec8781a3c6357dd808379283238a9e649ab5dd"
+          },
+          "keypoolSize": {
+            "type": "number",
+            "example": 100
           }
         },
         "required": [
-          "primaryAddress",
-          "viewKey",
-          "restoreHeight",
-          "walletHeight",
-          "daemonHeight",
-          "synced"
+          "chain"
         ]
       },
       "InvoiceListResponseDto": {

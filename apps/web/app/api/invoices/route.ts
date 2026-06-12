@@ -5,10 +5,12 @@ import { getChainApi, resolveChain } from '@/lib/api';
 export async function GET(req: NextRequest) {
   if (!(await verifyRequest(req)))
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const { searchParams } = req.nextUrl;
+
   const chain = resolveChain(searchParams.get('chain'));
-  const params = Object.fromEntries(searchParams);
-  delete params.chain; // backend doesn't expect this
+  const params = { ...Object.fromEntries(searchParams), chain };
+
   try {
     const { data } = await getChainApi(chain).get('/admin/invoices', {
       params,

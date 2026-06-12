@@ -13,7 +13,6 @@ interface HealthResponse {
 
 async function fetchHealth(chain: string): Promise<HealthResponse> {
   const { data } = await api.get('/health', { params: { chain } });
-
   return data;
 }
 
@@ -38,7 +37,7 @@ export default function OverviewPage() {
         <StatusCard label="Ready" status={ready?.status} loading={isLoading} />
         <StatusCard
           label="Syncing"
-          status={Boolean(synced?.status) ? 'ok' : 'no'}
+          status={synced?.status}
           loading={isLoading}
         />
       </div>
@@ -80,16 +79,14 @@ export default function OverviewPage() {
         </Section>
       )}
 
-      {synced && chain !== 'xmr' && (
+      {synced && chain === 'firo' && (
         <Section title="Node Status">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <Stat
-              label="Sync status"
-              value={synced.status === 'ok' ? 'Synced' : 'Syncing'}
+              label="Block height"
+              value={synced.daemonHeight.toLocaleString()}
             />
-            <Stat label="Block height" value={synced.behind.toLocaleString()} />
           </div>
-          <SyncBar walletHeight={synced.behind} daemonHeight={synced.behind} />
         </Section>
       )}
     </div>

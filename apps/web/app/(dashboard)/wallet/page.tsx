@@ -2,13 +2,24 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api, type WalletInfo, type XmrWalletInfo } from '@/lib/api';
+import {
+  api,
+  type WalletInfo,
+  type XmrWalletInfo,
+  type FiroWalletInfo,
+} from '@/lib/api';
 import { useChain } from '@/lib/chain-context';
-import { Copy, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
+import {
+  Copy,
+  Eye,
+  EyeOff,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+} from 'lucide-react';
 
 async function fetchWallet(chain: string): Promise<WalletInfo> {
   const { data } = await api.get('/wallet', { params: { chain } });
-
   return data;
 }
 
@@ -24,7 +35,8 @@ export default function WalletPage() {
   if (!data)
     return <p className="text-sm text-red-400">Failed to load wallet info</p>;
 
-  return chain === 'xmr' ? <XmrWallet data={data as XmrWalletInfo} /> : <></>;
+  if (chain === 'firo') return <FiroWallet data={data as FiroWalletInfo} />;
+  return <XmrWallet data={data as XmrWalletInfo} />;
 }
 
 function XmrWallet({ data }: { data: XmrWalletInfo }) {
@@ -34,7 +46,6 @@ function XmrWallet({ data }: { data: XmrWalletInfo }) {
         <h1 className="text-lg font-semibold text-zinc-100">Wallet — XMR</h1>
         <Badge ok={data.synced}>{data.synced ? 'Synced' : 'Syncing'}</Badge>
       </div>
-
       <Section title="Keys & Identity">
         <Field
           label="Primary Address"
@@ -48,6 +59,45 @@ function XmrWallet({ data }: { data: XmrWalletInfo }) {
           value={data.restoreHeight.toLocaleString()}
           mono
         />
+      </Section>
+    </div>
+  );
+}
+
+function FiroWallet({ data }: { data: FiroWalletInfo }) {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold text-zinc-100">Wallet — FIRO</h1>
+      </div>
+      <Section title="Node">
+        <Field
+          label="Block Height"
+          value={data.blockHeight.toLocaleString()}
+          mono
+        />
+        <Field label="Balance" value={`${data.balance} FIRO`} mono />
+        <Field label="Keypool Size" value={data.keypoolSize.toString()} mono />
+        {data.hdMasterKeyId && (
+          <Field
+            label="HD Master Key ID"
+            value={data.hdMasterKeyId}
+            mono
+            copyable
+          />
+        )}
+      </Section>
+      <Section title="Backup">
+        <div className="flex items-start gap-2 text-xs text-yellow-400">
+          <AlertTriangle size={13} className="shrink-0 mt-0.5" />
+          <span>
+            To back up this wallet run{' '}
+            <code className="font-mono bg-zinc-800 px-1 rounded">
+              dumpwallet &lt;filename&gt;
+            </code>{' '}
+            directly on the node.
+          </span>
+        </div>
       </Section>
     </div>
   );

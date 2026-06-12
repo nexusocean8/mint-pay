@@ -25,6 +25,7 @@ const nav = [
 
 const chains: { value: Chain; label: string }[] = [
   { value: 'xmr', label: 'XMR' },
+  { value: 'firo', label: 'FIRO' },
 ];
 
 export default function DashboardLayout({
@@ -78,21 +79,21 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
           <p className="px-3 mb-1 text-xs text-zinc-500 uppercase tracking-wider">
             Chain
           </p>
-          <div className="flex rounded-md overflow-hidden border border-zinc-700">
+          <select
+            value={chain}
+            onChange={(e) => setChain(e.target.value as Chain)}
+            className="w-full px-3 py-1.5 text-sm font-medium rounded-md border border-zinc-700 bg-zinc-900 text-green-400 cursor-pointer focus:outline-none focus:border-green-500 transition-colors"
+          >
             {chains.map((c) => (
-              <button
+              <option
                 key={c.value}
-                onClick={() => setChain(c.value)}
-                className={`flex-1 py-1.5 text-xs font-medium transition-colors ${
-                  chain === c.value
-                    ? 'bg-green-500 text-white'
-                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
-                }`}
+                value={c.value}
+                className="text-zinc-100 bg-zinc-900"
               >
                 {c.label}
-              </button>
+              </option>
             ))}
-          </div>
+          </select>
         </div>
 
         <nav className="flex-1 px-3 py-2 space-y-1">
