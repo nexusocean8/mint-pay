@@ -28,7 +28,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY pnpm-workspace.yaml ./
-COPY package.json pnpm-lock.yaml .env ./
+COPY package.json pnpm-lock.yaml ./
 COPY packages/tsconfig/package.json ./packages/tsconfig/
 COPY packages/types/package.json ./packages/types/
 
