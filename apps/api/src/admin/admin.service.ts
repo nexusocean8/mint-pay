@@ -13,6 +13,7 @@ import {
   InvoiceDocument,
   Chain,
 } from '../invoices/schemas/invoice.schema';
+import { StatsResponseDto } from './dto/wallet-stats.dto';
 
 type LeanInvoice = Invoice & {
   _id: Types.ObjectId;
@@ -33,6 +34,26 @@ export class AdminService {
       return this.firo.getWalletInfo();
     }
     return this.monero.getWalletInfo();
+  }
+
+  async getStats(chain: Chain): Promise<StatsResponseDto> {
+    const [volumeResult] = await this.invoiceModel.aggregate([
+      { $match: { chain, status: 'confirmed' } },
+      {
+        $group: { _id: null, total: { $sum: { $toLong: '$receivedAtomic' } } },
+      },
+    ]);
+
+    const confirmedVolumeAtomic = volumeResult
+      ? String(volumeResult.total)
+      : '0';
+
+    if (chain === Chain.Firo) {
+      const wallet = await this.firo.getWalletInfo();
+      return { confirmedVolumeAtomic, balance: wallet.balance };
+    }
+
+    return { confirmedVolumeAtomic };
   }
 
   async listInvoices(

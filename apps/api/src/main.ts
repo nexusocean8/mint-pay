@@ -67,8 +67,8 @@ async function bootstrap() {
 
   const port = config.get('PORT', { infer: true });
   await app.listen(port);
-  console.log(`Listening on port: ${port}`, 'Bootstrap');
   if (nodeEnv !== 'production') {
+    console.log(`UI at: http://localhost:3000`);
     console.log(`Swagger UI: http://localhost:${port}/docs`, 'Bootstrap');
   }
 }

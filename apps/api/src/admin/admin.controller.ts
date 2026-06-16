@@ -15,6 +15,7 @@ import {
   InvoiceListResponseDto,
 } from './dto/invoice-list.dto';
 import { Chain } from '../invoices/schemas/invoice.schema';
+import { StatsResponseDto } from './dto/wallet-stats.dto';
 
 @ApiTags('admin')
 @ApiSecurity('admin-key')
@@ -34,6 +35,13 @@ export class AdminController {
     @Query('chain') chain: Chain = Chain.Xmr,
   ): Promise<WalletInfoResponseDto> {
     return this.admin.getWalletInfo(chain);
+  }
+
+  @Get('stats')
+  @ApiOperation({ summary: 'Get stats' })
+  @ApiOkResponse({ type: StatsResponseDto })
+  async getStats(@Query('chain') chain: Chain): Promise<StatsResponseDto> {
+    return this.admin.getStats(chain);
   }
 
   @Get('invoices')

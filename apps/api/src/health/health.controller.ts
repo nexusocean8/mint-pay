@@ -43,7 +43,7 @@ export class HealthController {
     const checks: Record<string, HealthCheckDto> = {};
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-    checks.mongo = { ok: this.mongo.readyState === 1 };
+    checks.database = { ok: this.mongo.readyState === 1 };
 
     if (chain === Chain.Firo) {
       try {
@@ -62,9 +62,9 @@ export class HealthController {
       try {
         const conn = await this.monero.getClient().getDaemonConnection();
         const isOnline = conn?.getIsOnline?.() ?? true;
-        checks.daemon = { ok: isOnline, detail: conn?.getUri?.() ?? 'unknown' };
+        checks.node = { ok: isOnline, detail: conn?.getUri?.() ?? 'unknown' };
       } catch (err) {
-        checks.daemon = { ok: false, detail: (err as Error).message };
+        checks.node = { ok: false, detail: (err as Error).message };
       }
     }
 

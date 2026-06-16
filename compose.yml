@@ -34,13 +34,12 @@ services:
     container_name: mint_mongo
     image: mongo:8
     restart: unless-stopped
+    ports:
+      - 27017:27017
     volumes:
-      - mongo_data:/data/db
+      - ./mongo_data:/data/db
     networks:
       - mint_net
-
-volumes:
-  mongo_data:
 
 networks:
   mint_net:

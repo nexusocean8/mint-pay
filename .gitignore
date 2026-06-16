@@ -4,3 +4,4 @@ dist
 .next
 *.env
 _temp
+mongo_data

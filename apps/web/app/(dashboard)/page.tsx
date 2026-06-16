@@ -11,8 +11,18 @@ interface HealthResponse {
   synced: HealthSynced;
 }
 
+interface Stats {
+  confirmedVolumeAtomic: string;
+  balance?: number;
+}
+
 async function fetchHealth(chain: string): Promise<HealthResponse> {
   const { data } = await api.get('/health', { params: { chain } });
+  return data;
+}
+
+async function fetchStats(chain: string): Promise<Stats> {
+  const { data } = await api.get('/stats', { params: { chain } });
   return data;
 }
 
@@ -22,6 +32,12 @@ export default function OverviewPage() {
     queryKey: ['health', chain],
     queryFn: () => fetchHealth(chain),
     refetchInterval: 10_000,
+  });
+
+  const { data: stats } = useQuery({
+    queryKey: ['stats', chain],
+    queryFn: () => fetchStats(chain),
+    refetchInterval: 15_000,
   });
 
   const live = data?.live;
@@ -50,7 +66,6 @@ export default function OverviewPage() {
                 key={key}
                 label={key.charAt(0).toUpperCase() + key.slice(1)}
                 ok={check.ok}
-                detail={check.detail}
               />
             ))}
           </div>
@@ -62,14 +77,21 @@ export default function OverviewPage() {
           <div className="space-y-3">
             <div className="grid grid-cols-3 gap-4">
               <Stat
+                label="Block height"
+                value={synced.daemonHeight.toLocaleString()}
+              />
+              <Stat
                 label="Wallet height"
                 value={synced.walletHeight.toLocaleString()}
               />
               <Stat
-                label="Daemon height"
-                value={synced.daemonHeight.toLocaleString()}
+                label="Total volume"
+                value={
+                  stats
+                    ? `${(Number(stats.confirmedVolumeAtomic) / 1e12).toFixed(3)} XMR`
+                    : '—'
+                }
               />
-              <Stat label="Blocks behind" value={`${synced.behind}`} />
             </div>
             <SyncBar
               walletHeight={synced.walletHeight}
@@ -79,12 +101,20 @@ export default function OverviewPage() {
         </Section>
       )}
 
-      {synced && chain === 'firo' && (
+      {stats?.balance && chain === 'firo' && (
         <Section title="Node Status">
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <Stat
               label="Block height"
-              value={synced.daemonHeight.toLocaleString()}
+              value={synced ? synced.daemonHeight.toLocaleString() : '—'}
+            />
+            <Stat
+              label="Current balance"
+              value={`${stats.balance.toFixed(3)} FIRO`}
+            />
+            <Stat
+              label="Total volume"
+              value={`${(Number(stats.confirmedVolumeAtomic) / 1e8).toFixed(3)} FIRO`}
             />
           </div>
         </Section>
@@ -121,20 +151,11 @@ function StatusCard({
   );
 }
 
-function CheckRow({
-  label,
-  ok,
-  detail,
-}: {
-  label: string;
-  ok: boolean;
-  detail?: string;
-}) {
+function CheckRow({ label, ok }: { label: string; ok: boolean }) {
   return (
     <div className="flex items-center justify-between py-1.5 border-b border-zinc-800 last:border-0">
       <span className="text-sm text-zinc-300">{label}</span>
       <div className="flex items-center gap-2">
-        {detail && <span className="text-xs text-zinc-500">{detail}</span>}
         {ok ? (
           <span className="flex items-center gap-1 text-xs text-emerald-400">
             <CheckCircle size={13} /> ok

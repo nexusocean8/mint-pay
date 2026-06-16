@@ -379,6 +379,49 @@
         ]
       }
     },
+    "/v1/admin/stats": {
+      "get": {
+        "operationId": "AdminController_getStats",
+        "parameters": [
+          {
+            "name": "chain",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "xmr",
+                "firo"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatsResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid X-Admin-Api-Key header"
+          }
+        },
+        "security": [
+          {
+            "admin-key": []
+          }
+        ],
+        "summary": "Get stats",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/v1/admin/invoices": {
       "get": {
         "operationId": "AdminController_listInvoices",
@@ -1019,6 +1062,24 @@
           "chain"
         ]
       },
+      "StatsResponseDto": {
+        "type": "object",
+        "properties": {
+          "confirmedVolumeAtomic": {
+            "type": "string",
+            "example": "500000000",
+            "description": "Total confirmed volume in atomic units"
+          },
+          "balance": {
+            "type": "number",
+            "example": 1.5,
+            "description": "Wallet balance (Firo only)"
+          }
+        },
+        "required": [
+          "confirmedVolumeAtomic"
+        ]
+      },
       "InvoiceListResponseDto": {
         "type": "object",
         "properties": {
@@ -1074,7 +1135,7 @@
           "checks": {
             "type": "object",
             "example": {
-              "mongo": {
+              "database": {
                 "ok": true
               },
               "wallet": {

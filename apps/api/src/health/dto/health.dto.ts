@@ -19,7 +19,7 @@ export class ReadyResponseDto {
 
   @ApiProperty({
     example: {
-      mongo: { ok: true },
+      database: { ok: true },
       wallet: { ok: true, detail: 'height=1234567' },
       daemon: { ok: true, detail: 'http://monerod:38081' },
     },
