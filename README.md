@@ -20,4 +20,4 @@ Tentative plans, subject to change.
 - [] Accepted coin(s)
 - [] Invoice memos
 
-### Phase 3 - Developer Experience (TBA)
+### Phase 3 — Developer Experience (TBA)
