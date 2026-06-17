@@ -4,12 +4,20 @@ A self-hosted payment processor for privacy-focused cryptocurrencies. Inspired b
 
 ## Roadmap
 
+Tentative plans, subject to change.
+
 ### Phase 1 — Core Payment Processor
 
-- [x] Invoice-based payment flow
+- [x] Invoice-based payments
 - [x] Multi-chain support
-- [x] Authenticated webhook notifications
+- [x] Authenticated webhooks
 - [x] Admin dashboard
 - [x] Docker deployment
 
-### Phase 2 — In Planning
+### Phase 2 — Merchant Focus
+
+- [] 2FA system
+- [] Accepted coin(s)
+- [] Invoice memos
+
+### Phase 3 - Developer Experience (TBA)
