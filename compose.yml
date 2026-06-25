@@ -24,6 +24,8 @@ services:
       - mint_mongo
     networks:
       - mint_net
+      - firo_net
+      - monero_net
 
   mint_mongo:
     container_name: mint_mongo
@@ -38,7 +40,58 @@ services:
     networks:
       - mint_net
 
+  firod:
+    container_name: firod
+    image: code.nexusocean.org/vincent/firod:0.14.16.1
+    restart: unless-stopped
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
+    expose:
+      - 8888
+    env_file:
+      - .env
+    volumes:
+      - ./firo-data:/home/firo/.firo
+      - ./firo-data/firo.conf:/home/firo/.firo/firo.conf:ro
+    networks:
+      - firo_net
+
+  monerod:
+    container_name: monerod
+    image: code.nexusocean.org/vincent/simple-monerod:v0.18.5.0
+    restart: unless-stopped
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
+    volumes:
+      - ./monero-data:/home/monero/.bitmonero
+    expose:
+      - 38081
+    command:
+      - --stagenet
+      - --rpc-restricted-bind-ip=0.0.0.0
+      - --rpc-restricted-bind-port=38089
+      - --rpc-bind-ip=0.0.0.0
+      - --rpc-bind-port=38081
+      - --confirm-external-bind
+      - --enable-dns-blocklist
+      - --check-updates=disabled
+      - --max-log-files=3
+      - --max-log-file-size=1048576
+      - --no-igd
+      - --out-peers=64
+      - --limit-rate-down=1048576
+      - --public-node
+      - --rpc-login=${MONERO_RPC_LOGIN}
+    networks:
+      - monero_net
+
 networks:
   mint_net:
     driver: bridge
     name: mint_net
+  firo_net:
+    driver: bridge
+    name: firo_net
+  monero_net:
+    driver: bridge
+    name: monero_net

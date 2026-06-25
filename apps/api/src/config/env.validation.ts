@@ -121,12 +121,6 @@ export class EnvironmentVariables {
   @IsOptional()
   FIRO_RPC_PROTOCOL: string = 'http';
 
-  @Transform(toInt)
-  @IsInt()
-  @Min(1)
-  @IsOptional()
-  FIRO_CONFIRMATION_DEPTH: number = 1;
-
   // --- Pricing ---
   @IsEnum(RateProvider)
   @IsOptional()
