@@ -13,7 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { ChainProvider, useChain } from '@/lib/chain-context';
-import type { Chain } from '@/lib/api';
+import { Chain } from '@mint-pay/types';
 
 const nav = [
   { href: '/', label: 'Overview', icon: Activity },
@@ -21,11 +21,6 @@ const nav = [
   { href: '/wallet', label: 'Wallet', icon: Wallet },
   { href: '/settings', label: 'Settings', icon: Settings },
   { href: '/profile', label: 'Profile', icon: User },
-];
-
-const chains: { value: Chain; label: string }[] = [
-  { value: 'xmr', label: 'XMR' },
-  { value: 'firo', label: 'FIRO' },
 ];
 
 export default function DashboardLayout({
@@ -43,7 +38,7 @@ export default function DashboardLayout({
 function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const { chain, setChain } = useChain();
+  const { chain, setChain, enabledChains } = useChain();
 
   return (
     <div className="flex h-screen">
@@ -84,13 +79,9 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
             onChange={(e) => setChain(e.target.value as Chain)}
             className="w-full px-3 py-1.5 text-sm font-medium rounded-md border border-zinc-700 bg-zinc-900 text-green-400 cursor-pointer focus:outline-none focus:border-green-500 transition-colors"
           >
-            {chains.map((c) => (
-              <option
-                key={c.value}
-                value={c.value}
-                className="text-zinc-100 bg-zinc-900"
-              >
-                {c.label}
+            {enabledChains.map((c) => (
+              <option key={c} value={c} className="text-zinc-100 bg-zinc-900">
+                {c.toUpperCase()}
               </option>
             ))}
           </select>

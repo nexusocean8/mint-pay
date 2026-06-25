@@ -9,10 +9,6 @@
       "legacyDecorator": true,
       "decoratorMetadata": true
     },
-    "baseUrl": ".",
-    "paths": {
-      "@mint-pay/types": ["../../packages/types/index.ts"]
-    },
     "target": "es2021"
   },
   "module": {

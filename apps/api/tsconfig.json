@@ -4,10 +4,7 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "incremental": false,
-    "types": ["node", "jest"],
-    "paths": {
-      "@mint-pay/types": ["../../packages/types/index.ts"]
-    }
+    "types": ["node", "jest"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["test", "dist", "node_modules"]

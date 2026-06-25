@@ -1,23 +1,82 @@
 # Mint Pay
 
-A self-hosted payment processor for privacy-focused cryptocurrencies. Inspired by BTCPay's Greenfield API, Mint Pay is intended to be a solution for merchants to accept payments in a non-custodial way, as well as provide sales reporting and the flexibility to determine their own payment flow. Rather than provide a pre-built store, the intention is to provide a well documented and easy to integrate solution to accept supported currencies in fixed fiat amounts.
+A self-hosted payment processor for privacy-focused cryptocurrencies. Accepts payments in fixed fiat amounts and notifies your application via webhooks. Currently supports Firo and Monero.
 
 ## Roadmap
-
-Tentative plans, subject to change.
 
 ### Phase 1 — Core Payment Processor
 
 - [x] Invoice-based payments
-- [x] Multi-chain support
+- [x] Multi-chain support (Firo, XMR)
 - [x] Authenticated webhooks
 - [x] Admin dashboard
 - [x] Docker deployment
 
 ### Phase 2 — Merchant Focus
 
-- [] 2FA system
-- [] Accepted coin(s)
-- [] Invoice memos
+- [ ] 2FA
+- [ ] Per-invoice coin selection
+- [ ] Invoice memos
 
 ### Phase 3 — Developer Experience (TBA)
+
+---
+
+## Stack
+
+- **Monorepo:** Turborepo + pnpm workspaces
+- **Frontend:** Next.js (App Router)
+- **Backend:** NestJS 11, MongoDB 8
+- **Coins:** Firo and Monero
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 24+
+- pnpm 11+
+- Docker + Docker Compose
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Starts the admin dashboard on port 3000 and the API on port 8080.
+
+---
+
+## Usage
+
+### Create an invoice
+
+```bash
+curl -X POST http://localhost:8080/v1/invoices \
+  -H "Content-Type: application/json" \
+  -H "X-Api-Key: $API_KEY" \
+  -d '{"amountAtomic":"100000000","fiatCurrency":"USD","chain":"firo"}'
+```
+
+`amountAtomic` is in the chain's atomic unit — satoshis for Firo (10⁸ per FIRO), piconero for XMR (10¹² per XMR). Optional fields: `expiresInSeconds`, `confirmationsRequired`, `webhookUrl`, `metadata`.
+
+### Fetch an invoice
+
+```bash
+curl http://localhost:8080/v1/invoices/<id> \
+  -H "X-Api-Key: $API_KEY"
+```
+
+---
+
+## Invoice Statuses
+
+| Status      | Description                |
+| ----------- | -------------------------- |
+| `pending`   | Awaiting payment           |
+| `seen`      | Incoming tx detected       |
+| `confirmed` | Payment complete           |
+| `underpaid` | Confirmed but amount short |
+| `expired`   | Expired with no tx         |
+| `cancelled` | Manually cancelled         |

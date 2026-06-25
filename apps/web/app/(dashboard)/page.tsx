@@ -101,20 +101,26 @@ export default function OverviewPage() {
         </Section>
       )}
 
-      {stats?.balance && chain === 'firo' && (
+      {synced && chain === 'firo' && (
         <Section title="Node Status">
-          <div className="grid grid-cols-3 gap-4">
-            <Stat
-              label="Block height"
-              value={synced ? synced.daemonHeight.toLocaleString() : '—'}
-            />
-            <Stat
-              label="Current balance"
-              value={`${stats.balance.toFixed(3)} FIRO`}
-            />
-            <Stat
-              label="Total volume"
-              value={`${(Number(stats.confirmedVolumeAtomic) / 1e8).toFixed(3)} FIRO`}
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-4">
+              <Stat
+                label="Block height"
+                value={synced ? synced.daemonHeight.toLocaleString() : '—'}
+              />
+              <Stat
+                label="Current balance"
+                value={`${Number(stats?.balance).toFixed(3) ?? '0.000'} FIRO`}
+              />
+              <Stat
+                label="Total volume"
+                value={`${(Number(stats?.confirmedVolumeAtomic) / 1e8).toFixed(3)} FIRO`}
+              />
+            </div>
+            <SyncBar
+              walletHeight={synced.walletHeight}
+              daemonHeight={synced.daemonHeight}
             />
           </div>
         </Section>

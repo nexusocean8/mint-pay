@@ -1,5 +1,5 @@
+import { Asset, Chain, InvoiceStatus } from '@mint-pay/types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Asset, Chain, InvoiceStatus } from '../schemas/invoice.schema';
 
 export class InvoiceResponseDto {
   @ApiProperty({ example: '6630f0c8a1b2c3d4e5f6a7b8' })

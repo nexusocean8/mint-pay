@@ -1,19 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, StreamableFile } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { MoneroService } from '../monero/monero.service';
-import { FiroService } from '../firo/firo.service';
+import { ChainsService } from '../chains/chains.service';
 import { WalletInfoResponseDto } from './dto/wallet-info.dto';
 import {
   InvoiceListQueryDto,
   InvoiceListResponseDto,
 } from './dto/invoice-list.dto';
-import {
-  Invoice,
-  InvoiceDocument,
-  Chain,
-} from '../invoices/schemas/invoice.schema';
+import { Invoice, InvoiceDocument } from '../invoices/schemas/invoice.schema';
 import { StatsResponseDto } from './dto/wallet-stats.dto';
+import { Chain } from '@mint-pay/types';
+import { createReadStream } from 'fs';
+import { unlink } from 'fs/promises';
 
 type LeanInvoice = Invoice & {
   _id: Types.ObjectId;
@@ -24,16 +22,12 @@ type LeanInvoice = Invoice & {
 @Injectable()
 export class AdminService {
   constructor(
-    private readonly monero: MoneroService,
-    private readonly firo: FiroService,
+    private readonly chains: ChainsService,
     @InjectModel(Invoice.name) private invoiceModel: Model<InvoiceDocument>,
   ) {}
 
   async getWalletInfo(chain: Chain): Promise<WalletInfoResponseDto> {
-    if (chain === Chain.Firo) {
-      return this.firo.getWalletInfo();
-    }
-    return this.monero.getWalletInfo();
+    return this.chains.get(chain).getWalletInfo();
   }
 
   async getStats(chain: Chain): Promise<StatsResponseDto> {
@@ -48,12 +42,8 @@ export class AdminService {
       ? String(volumeResult.total)
       : '0';
 
-    if (chain === Chain.Firo) {
-      const wallet = await this.firo.getWalletInfo();
-      return { confirmedVolumeAtomic, balance: wallet.balance };
-    }
-
-    return { confirmedVolumeAtomic };
+    const wallet = await this.chains.get(chain).getWalletInfo();
+    return { confirmedVolumeAtomic, balance: wallet.balance };
   }
 
   async listInvoices(
@@ -101,5 +91,28 @@ export class AdminService {
     }));
 
     return { data, total, page, limit };
+  }
+
+  async getWalletBackup(): Promise<StreamableFile> {
+    const adapter = this.chains.get(Chain.Firo);
+    if (!adapter.backupWallet) {
+      throw new Error('Backup not supported for this chain');
+    }
+    const wallet = await adapter.backupWallet();
+    const file = createReadStream(wallet);
+
+    const cleanup = () => {
+      unlink(wallet).catch((err) =>
+        console.log('Failed to delete wallet backup:', err),
+      );
+    };
+
+    file.once('close', cleanup);
+    file.once('error', cleanup);
+
+    return new StreamableFile(file, {
+      type: 'application/octet-stream',
+      disposition: 'attachment; filename="wallet.dat"',
+    });
   }
 }

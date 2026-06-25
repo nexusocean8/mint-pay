@@ -1,5 +1,5 @@
+import { Chain } from '@mint-pay/types';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Chain } from '../../invoices/schemas/invoice.schema';
 
 export class WalletInfoResponseDto {
   @ApiProperty({ enum: Chain, example: Chain.Xmr })

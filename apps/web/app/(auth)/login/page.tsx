@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import axios from 'axios';
+import { Button, Field, Input, Label } from '@headlessui/react';
 
 type Mode = 'loading' | 'login' | 'register' | 'error';
 
@@ -67,23 +68,23 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-zinc-950">
       <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-lg p-8 space-y-6">
         <div>
-          <p className="text-xs font-semibold tracking-widest text-green-400 uppercase mb-1">
-            Payments Admin
+          <p className="text-2xl font-semibold tracking-widest text-green-400 uppercase mb-1">
+            {mode === 'login' ? 'Welcome back' : 'Mint Pay'}
           </p>
           <h1 className="text-xl font-semibold text-zinc-100">
             {mode === 'login' ? 'Sign in' : 'Create account'}
           </h1>
           {mode === 'register' && (
-            <p className="text-xs text-zinc-500 mt-1">
-              No users found. Set up your admin account.
+            <p className="text-sm text-zinc-500 mt-1">
+              Admin account registration.
             </p>
           )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-xs text-zinc-400">Email</label>
-            <input
+          <Field className="space-y-1">
+            <Label className="text-xs text-zinc-400">Email</Label>
+            <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -91,11 +92,11 @@ export default function LoginPage() {
               autoComplete="email"
               className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-green-400 transition-colors"
             />
-          </div>
+          </Field>
 
-          <div className="space-y-1">
-            <label className="text-xs text-zinc-400">Password</label>
-            <input
+          <Field className="space-y-1">
+            <Label className="text-xs text-zinc-400">Password</Label>
+            <Input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -105,11 +106,11 @@ export default function LoginPage() {
               }
               className="w-full bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-green-400 transition-colors"
             />
-          </div>
+          </Field>
 
           {error && <p className="text-xs text-red-400">{error}</p>}
 
-          <button
+          <Button
             type="submit"
             disabled={pending}
             className="w-full bg-green-500 hover:bg-green-400 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md px-4 py-2 transition-colors"
@@ -121,7 +122,7 @@ export default function LoginPage() {
               : mode === 'login'
                 ? 'Sign in'
                 : 'Create account'}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

@@ -1,6 +1,6 @@
+import { Chain } from '@mint-pay/types';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
-import { Chain } from '../../invoices/schemas/invoice.schema';
 
 export enum WebhookEvent {
   InvoiceSeen = 'invoice.seen',

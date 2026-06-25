@@ -16,6 +16,7 @@ COPY packages/tsconfig ./packages/tsconfig
 COPY packages/types ./packages/types
 COPY apps/api ./apps/api
 
+RUN pnpm --filter @mint-pay/types build
 RUN pnpm --filter @mint-pay/api build
 
 FROM node:24-slim
@@ -34,6 +35,7 @@ COPY apps/api/package.json ./apps/api/
 RUN pnpm install --frozen-lockfile --prod
 
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/packages/types/dist ./packages/types/dist
 
 ENV NODE_ENV=production
 

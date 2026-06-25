@@ -15,7 +15,10 @@ import { Payment, PaymentSchema } from '../payments/schemas/payment.schema';
 import { WebhooksModule } from '../webhooks/webhooks.module';
 import { ScannerLockModule } from '../scanner/scanner-lock.module';
 import { SettingsModule } from '../settings/settings.module';
+import { FiroAdapter } from '../chains/firo-adapter';
+import { ChainsService } from '../chains/chains.service';
 import type { EnvironmentVariables } from '../config/env.validation';
+import { Chain } from '@mint-pay/types';
 
 const INTERVAL_NAME = 'firo-payment-scanner-tick';
 
@@ -46,17 +49,21 @@ const INTERVAL_NAME = 'firo-payment-scanner-tick';
     },
     FiroService,
     FiroScannerService,
+    FiroAdapter,
   ],
-  exports: [FiroService],
 })
 export class FiroModule implements OnApplicationBootstrap, OnModuleDestroy {
   constructor(
     private readonly registry: SchedulerRegistry,
     private readonly scanner: FiroScannerService,
     private readonly config: ConfigService<EnvironmentVariables, true>,
+    private readonly chainsService: ChainsService,
+    private readonly firoAdapter: FiroAdapter,
   ) {}
 
   onApplicationBootstrap(): void {
+    this.chainsService.register(Chain.Firo, this.firoAdapter);
+
     const ms = this.config.get('SCANNER_INTERVAL_MS', { infer: true });
     const handle = setInterval(() => {
       void this.scanner.tick();

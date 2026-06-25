@@ -22,8 +22,8 @@ export class AuthService {
     return { registered: count > 0 };
   }
 
-  async me(sub: string) {
-    const user = await this.userModel.findById(new Types.ObjectId(sub));
+  async me() {
+    const user = await this.userModel.findOne();
 
     if (!user) {
       throw new UnauthorizedException();
@@ -54,8 +54,8 @@ export class AuthService {
     return this.generateToken(user);
   }
 
-  async update(sub: string, updateDto: UpdateDto) {
-    const user = await this.userModel.findById(new Types.ObjectId(sub));
+  async update(updateDto: UpdateDto) {
+    const user = await this.userModel.findOne({ email: updateDto.email });
 
     if (!user) {
       throw new UnauthorizedException();
@@ -80,7 +80,7 @@ export class AuthService {
       updates.password = await argon2.hash(updateDto.newPassword);
     }
 
-    await this.userModel.findByIdAndUpdate(new Types.ObjectId(sub), updates);
+    await this.userModel.findOneAndUpdate({ email: updateDto.email }, updates);
 
     return { email: updates.email ?? user.email };
   }

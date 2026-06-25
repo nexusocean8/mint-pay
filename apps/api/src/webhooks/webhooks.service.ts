@@ -11,9 +11,9 @@ import {
   WebhookDeliveryStatus,
   WebhookEvent,
 } from './schemas/webhook-delivery.schema';
-import { Chain } from '../invoices/schemas/invoice.schema';
 import type { EnvironmentVariables } from '../config/env.validation';
 import { SettingsService } from '../settings/settings.service';
+import { Chain } from '@mint-pay/types';
 
 const CHAIN = Chain.Xmr;
 

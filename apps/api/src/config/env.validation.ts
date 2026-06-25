@@ -1,3 +1,4 @@
+import { Chain } from '@mint-pay/types';
 import { plainToInstance, Transform } from 'class-transformer';
 import {
   IsBoolean,
@@ -36,6 +37,11 @@ const toBool = ({ value }: { value: unknown }): boolean => {
   return String(value).toLowerCase() === 'true';
 };
 
+const toChainArray = ({ value }: { value: unknown }): Chain[] => {
+  const raw = Array.isArray(value) ? value : String(value).split(',');
+  return raw.map((v) => v.trim().toLowerCase()) as Chain[];
+};
+
 export class EnvironmentVariables {
   // --- App ---
   @IsEnum(NodeEnv)
@@ -62,17 +68,21 @@ export class EnvironmentVariables {
 
   // --- monerod ---
   @IsUrl({ require_tld: false, require_protocol: true })
-  MONERO_DAEMON_URI!: string;
+  @IsOptional()
+  MONERO_DAEMON_URI?: string;
 
   @IsString()
-  MONERO_DAEMON_USER!: string;
+  @IsOptional()
+  MONERO_DAEMON_USER?: string;
 
   @IsString()
-  MONERO_DAEMON_PASSWORD!: string;
+  @IsOptional()
+  MONERO_DAEMON_PASSWORD?: string;
 
   // --- Wallet (view-only, in-process MoneroWalletFull) ---
   @IsString()
-  MONERO_WALLET_PATH!: string;
+  @IsOptional()
+  MONERO_WALLET_PATH?: string;
 
   @IsHexadecimal()
   @Length(64, 64)
@@ -91,17 +101,21 @@ export class EnvironmentVariables {
 
   // --- Firo RPC ---
   @IsString()
-  FIRO_RPC_HOST!: string;
+  @IsOptional()
+  FIRO_RPC_HOST?: string;
 
   @Transform(toInt)
   @IsInt()
-  FIRO_RPC_PORT!: number;
+  @IsOptional()
+  FIRO_RPC_PORT?: number;
 
   @IsString()
-  FIRO_RPC_USER!: string;
+  @IsOptional()
+  FIRO_RPC_USER?: string;
 
   @IsString()
-  FIRO_RPC_PASS!: string;
+  @IsOptional()
+  FIRO_RPC_PASS?: string;
 
   @IsString()
   @IsOptional()
@@ -198,6 +212,11 @@ export class EnvironmentVariables {
   @IsInt()
   @IsOptional()
   WEBHOOK_TIMEOUT_MS: number = 10_000;
+
+  // --- Enabled chains ---
+  @Transform(toChainArray)
+  @IsEnum(Chain, { each: true })
+  ENABLED_CHAINS!: Chain[];
 }
 
 export const validateEnv = (
@@ -210,5 +229,38 @@ export const validateEnv = (
   if (errors.length > 0) {
     throw new Error(`Invalid environment:\n${errors.toString()}`);
   }
+
+  if (!validated.ENABLED_CHAINS?.length) {
+    throw new Error('ENABLED_CHAINS must specify at least one chain');
+  }
+
+  if (validated.ENABLED_CHAINS.includes(Chain.Xmr)) {
+    const missing = [
+      'MONERO_DAEMON_URI',
+      'MONERO_DAEMON_USER',
+      'MONERO_DAEMON_PASSWORD',
+      'MONERO_WALLET_PATH',
+    ].filter((k) => !validated[k as keyof EnvironmentVariables]);
+    if (missing.length) {
+      throw new Error(
+        `XMR enabled but missing required vars: ${missing.join(', ')}`,
+      );
+    }
+  }
+
+  if (validated.ENABLED_CHAINS.includes(Chain.Firo)) {
+    const missing = [
+      'FIRO_RPC_HOST',
+      'FIRO_RPC_PORT',
+      'FIRO_RPC_USER',
+      'FIRO_RPC_PASS',
+    ].filter((k) => !validated[k as keyof EnvironmentVariables]);
+    if (missing.length) {
+      throw new Error(
+        `Firo enabled but missing required vars: ${missing.join(', ')}`,
+      );
+    }
+  }
+
   return validated;
 };

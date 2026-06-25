@@ -7,20 +7,21 @@ export const api = axios.create({
 });
 
 // Server-side: Mint service
-export const mintApi = axios.create();
-mintApi.interceptors.request.use((config) => {
-  config.baseURL = process.env.MINT_API_URL ?? 'http://localhost:8080/v1';
-  config.headers['X-Admin-Api-Key'] = process.env.MINT_ADMIN_KEY ?? '';
-  config.headers['X-Api-Key'] = process.env.MINT_API_KEY ?? '';
-  return config;
+export const mintApi = axios.create({
+  baseURL: process.env.MINT_API_URL ?? 'http://localhost:8080/v1',
+  headers: {
+    'X-Admin-Api-Key': process.env.MINT_ADMIN_KEY ?? '',
+    'X-Api-Key': process.env.MINT_API_KEY ?? '',
+  },
 });
 
-export type Chain = 'xmr' | 'firo';
+export type Chain = 'firo' | 'xmr';
 
 export function getChainApi(chain: Chain) {
   switch (chain) {
-    case 'xmr':
     case 'firo':
+    case 'xmr':
+
     default:
       return mintApi;
   }

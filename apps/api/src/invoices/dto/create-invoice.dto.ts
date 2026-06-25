@@ -10,7 +10,7 @@ import {
   IsEnum,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Chain } from '../schemas/invoice.schema';
+import { Chain } from '@mint-pay/types';
 
 export class CreateInvoiceDto {
   @ApiProperty({

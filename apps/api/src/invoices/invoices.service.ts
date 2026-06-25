@@ -6,19 +6,14 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, isValidObjectId } from 'mongoose';
-import {
-  Invoice,
-  InvoiceDocument,
-  Chain,
-  Asset,
-} from './schemas/invoice.schema';
+import { Invoice, InvoiceDocument } from './schemas/invoice.schema';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { InvoiceResponseDto } from './dto/invoice-response.dto';
 import { PriceService } from '../price/price.service';
-import { MoneroService } from '../monero/monero.service';
-import { FiroService } from '../firo/firo.service';
+import { ChainsService } from '../chains/chains.service';
 import { SettingsService } from '../settings/settings.service';
 import BigNumber from 'bignumber.js';
+import { Asset, Chain } from '@mint-pay/types';
 
 const CHAIN_CONFIG = {
   [Chain.Xmr]: { asset: Asset.Xmr, decimals: 12, symbol: 'XMR' },
@@ -33,8 +28,7 @@ export class InvoicesService {
     @InjectModel(Invoice.name)
     private readonly invoices: Model<InvoiceDocument>,
     private readonly price: PriceService,
-    private readonly monero: MoneroService,
-    private readonly firo: FiroService,
+    private readonly chains: ChainsService,
     private readonly settings: SettingsService,
   ) {}
 
@@ -71,10 +65,10 @@ export class InvoicesService {
       );
     }
 
-    const { address, addressIndex } = await this.resolveAddress(
-      chain,
-      rateLockedAt,
-    );
+    const { address, addressIndex } = await this.chains
+      .get(chain)
+      .resolveAddress(`invoice:${rateLockedAt.toISOString()}`);
+
     const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
     const created = await this.invoices.create({
@@ -104,21 +98,6 @@ export class InvoicesService {
     const inv = await this.invoices.findById(id).exec();
     if (!inv) throw new NotFoundException('Invoice not found');
     return this.toResponse(inv);
-  }
-
-  private async resolveAddress(
-    chain: Chain,
-    rateLockedAt: Date,
-  ): Promise<{ address: string; addressIndex: number }> {
-    if (chain === Chain.Xmr) {
-      const sub = await this.monero.createSubaddress(
-        `invoice:${rateLockedAt.toISOString()}`,
-      );
-      return { address: sub.address, addressIndex: sub.index };
-    }
-    // Firo hotwallet — addressIndex is not meaningful but kept for schema consistency
-    const address = await this.firo.getNewAddress();
-    return { address, addressIndex: 0 };
   }
 
   private toResponse(inv: InvoiceDocument): InvoiceResponseDto {

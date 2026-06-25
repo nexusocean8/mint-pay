@@ -6,6 +6,7 @@ import {
 import { MongooseModule } from '@nestjs/mongoose';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
+import { Chain } from '@mint-pay/types';
 import { MoneroWalletProvider } from './monero.provider';
 import { MoneroService } from './monero.service';
 import { MoneroScannerService } from './monero-scanner.service';
@@ -14,6 +15,8 @@ import { Invoice, InvoiceSchema } from '../invoices/schemas/invoice.schema';
 import { Payment, PaymentSchema } from '../payments/schemas/payment.schema';
 import { WebhooksModule } from '../webhooks/webhooks.module';
 import { SettingsModule } from '../settings/settings.module';
+import { MoneroAdapter } from '../chains/monero-adapter';
+import { ChainsService } from '../chains/chains.service';
 import type { EnvironmentVariables } from '../config/env.validation';
 
 const INTERVAL_NAME = 'xmr-payment-scanner-tick';
@@ -28,7 +31,12 @@ const INTERVAL_NAME = 'xmr-payment-scanner-tick';
     WebhooksModule,
     SettingsModule,
   ],
-  providers: [MoneroWalletProvider, MoneroService, MoneroScannerService],
+  providers: [
+    MoneroWalletProvider,
+    MoneroService,
+    MoneroScannerService,
+    MoneroAdapter,
+  ],
   exports: [MoneroService],
 })
 export class MoneroModule implements OnApplicationBootstrap, OnModuleDestroy {
@@ -36,9 +44,13 @@ export class MoneroModule implements OnApplicationBootstrap, OnModuleDestroy {
     private readonly registry: SchedulerRegistry,
     private readonly scanner: MoneroScannerService,
     private readonly config: ConfigService<EnvironmentVariables, true>,
+    private readonly chainsService: ChainsService,
+    private readonly moneroAdapter: MoneroAdapter,
   ) {}
 
   onApplicationBootstrap(): void {
+    this.chainsService.register(Chain.Xmr, this.moneroAdapter);
+
     const ms = this.config.get('SCANNER_INTERVAL_MS', { infer: true });
     const handle = setInterval(() => {
       void this.scanner.tick();

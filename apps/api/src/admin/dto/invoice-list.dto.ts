@@ -1,8 +1,8 @@
 import { ApiPropertyOptional, ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsInt, IsOptional, Min } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Chain, InvoiceStatus } from '../../invoices/schemas/invoice.schema';
 import { InvoiceResponseDto } from '../../invoices/dto/invoice-response.dto';
+import { Chain, InvoiceStatus } from '@mint-pay/types';
 
 export class InvoiceListQueryDto {
   @ApiPropertyOptional({ enum: Chain, default: Chain.Xmr })

@@ -15,6 +15,20 @@
         ]
       }
     },
+    "/v1/chains": {
+      "get": {
+        "operationId": "ChainsController_getConfig",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Chains"
+        ]
+      }
+    },
     "/v1/admin/settings": {
       "get": {
         "operationId": "SettingsController_get",
@@ -497,6 +511,37 @@
           }
         ],
         "summary": "List invoices",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/v1/admin/firo/backup": {
+      "get": {
+        "operationId": "AdminController_getWalletBackup",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Wallet backup file stream",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid X-Admin-Api-Key header"
+          }
+        },
+        "security": [
+          {
+            "admin-key": []
+          }
+        ],
+        "summary": "Download a fresh wallet.dat backup",
         "tags": [
           "admin"
         ]

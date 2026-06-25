@@ -21,9 +21,7 @@ import {
   UpdateResponseDto,
   StatusResponseDto,
 } from './dto/auth-response.dto';
-import { GetUser } from '../decorators/get-user';
-import { PayloadDto } from './dto/payload.dto';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { AdminKeyGuard } from './admin-key.guard';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -41,10 +39,10 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiResponse({ status: 200, type: MeResponseDto })
   @ApiResponse({ status: 401, description: 'Missing or invalid token' })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AdminKeyGuard)
   @Get('me')
-  async me(@GetUser() user: PayloadDto): Promise<MeResponseDto> {
-    return await this.authService.me(user.sub);
+  async me(): Promise<MeResponseDto> {
+    return await this.authService.me();
   }
 
   @ApiOperation({
@@ -78,12 +76,9 @@ export class AuthController {
     status: 401,
     description: 'Invalid credentials or missing token',
   })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AdminKeyGuard)
   @Patch('update')
-  async update(
-    @GetUser() user: PayloadDto,
-    @Body() updateDto: UpdateDto,
-  ): Promise<UpdateResponseDto> {
-    return await this.authService.update(user.sub, updateDto);
+  async update(@Body() updateDto: UpdateDto): Promise<UpdateResponseDto> {
+    return await this.authService.update(updateDto);
   }
 }

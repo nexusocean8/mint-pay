@@ -1,4 +1,10 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  StreamableFile,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -6,6 +12,7 @@ import {
   ApiOkResponse,
   ApiUnauthorizedResponse,
   ApiQuery,
+  ApiProduces,
 } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { AdminKeyGuard } from '../auth/admin-key.guard';
@@ -14,8 +21,8 @@ import {
   InvoiceListQueryDto,
   InvoiceListResponseDto,
 } from './dto/invoice-list.dto';
-import { Chain } from '../invoices/schemas/invoice.schema';
 import { StatsResponseDto } from './dto/wallet-stats.dto';
+import { Chain } from '@mint-pay/types';
 
 @ApiTags('admin')
 @ApiSecurity('admin-key')
@@ -51,5 +58,16 @@ export class AdminController {
     @Query() query: InvoiceListQueryDto,
   ): Promise<InvoiceListResponseDto> {
     return this.admin.listInvoices(query);
+  }
+
+  @Get('firo/backup')
+  @ApiOperation({ summary: 'Download a fresh wallet.dat backup' })
+  @ApiProduces('application/octet-stream')
+  @ApiOkResponse({
+    description: 'Wallet backup file stream',
+    schema: { type: 'string', format: 'binary' },
+  })
+  async getWalletBackup(): Promise<StreamableFile> {
+    return await this.admin.getWalletBackup();
   }
 }

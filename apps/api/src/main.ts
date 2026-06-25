@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
+import * as dotenv from '@dotenvx/dotenvx';
+dotenv.config();
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -11,7 +13,7 @@ import { join } from 'path';
 
 const isProd = process.env.NODE_ENV === 'production';
 
-const origins = isProd ? true : 'http://localhost:3000';
+const origins = isProd ? true : 'http://localhost:8080';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -62,14 +64,10 @@ async function bootstrap() {
     );
   }
 
-  const uri = config.get('MONERO_DAEMON_URI');
-  console.log(uri);
-
-  const port = config.get('PORT', { infer: true });
-  await app.listen(port);
+  await app.listen(8080);
   if (nodeEnv !== 'production') {
     console.log(`UI at: http://localhost:3000`);
-    console.log(`Swagger UI: http://localhost:${port}/docs`, 'Bootstrap');
+    console.log(`Swagger UI: http://localhost:8080/docs`, 'Bootstrap');
   }
 }
 

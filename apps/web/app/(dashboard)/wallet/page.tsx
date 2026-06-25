@@ -15,7 +15,7 @@ import {
   EyeOff,
   CheckCircle,
   XCircle,
-  AlertTriangle,
+  Download,
 } from 'lucide-react';
 
 async function fetchWallet(chain: string): Promise<WalletInfo> {
@@ -88,16 +88,14 @@ function FiroWallet({ data }: { data: FiroWalletInfo }) {
         )}
       </Section>
       <Section title="Backup">
-        <div className="flex items-start gap-2 text-xs text-yellow-400">
-          <AlertTriangle size={13} className="shrink-0 mt-0.5" />
-          <span>
-            To back up this wallet run{' '}
-            <code className="font-mono bg-zinc-800 px-1 rounded">
-              dumpwallet &lt;filename&gt;
-            </code>{' '}
-            directly on the node.
-          </span>
-        </div>
+        <a
+          href="/api/backup"
+          download
+          className="inline-flex items-center gap-2 text-xs text-zinc-200 bg-zinc-800 hover:bg-zinc-700 transition-colors px-3 py-2 rounded-md"
+        >
+          <Download size={13} />
+          Download wallet backup
+        </a>
       </Section>
     </div>
   );

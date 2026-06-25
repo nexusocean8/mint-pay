@@ -11,7 +11,7 @@ import { MONERO_WALLET } from './monero.constants';
 import { SettingsService } from '../settings/settings.service';
 import { MoneroWalletListener } from 'monero-ts';
 import { WalletInfoResponseDto } from '../admin/dto/wallet-info.dto';
-import { Chain } from '../invoices/schemas/invoice.schema';
+import { Chain } from '@mint-pay/types';
 
 export interface WalletInfo {
   primaryAddress: string;

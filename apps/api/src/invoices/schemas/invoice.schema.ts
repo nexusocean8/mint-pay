@@ -1,24 +1,6 @@
+import { Asset, Chain, InvoiceStatus } from '@mint-pay/types';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
-
-export enum InvoiceStatus {
-  Pending = 'pending',
-  Seen = 'seen',
-  Confirmed = 'confirmed',
-  Underpaid = 'underpaid',
-  Expired = 'expired',
-  Cancelled = 'cancelled',
-}
-
-export enum Chain {
-  Xmr = 'xmr',
-  Firo = 'firo',
-}
-
-export enum Asset {
-  Xmr = 'xmr',
-  Firo = 'firo',
-}
 
 export type InvoiceDocument = HydratedDocument<Invoice>;
 
