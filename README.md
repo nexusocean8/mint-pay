@@ -15,7 +15,7 @@ A self-hosted payment processor for privacy-focused cryptocurrencies. Accepts pa
 ### Phase 2 — Merchant Focus
 
 - [ ] 2FA
-- [ ] Per-invoice coin selection
+- [x] Per-invoice coin selection
 - [ ] Invoice memos
 
 ### Phase 3 — Developer Experience (TBA)
