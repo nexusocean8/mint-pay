@@ -4,7 +4,7 @@
     "rootDir": "./",
     "outDir": "./dist",
     "declaration": true,
-    "module": "CommonJS",
+    "module": "CommonJS"
   },
   "include": ["index.ts"]
 }
