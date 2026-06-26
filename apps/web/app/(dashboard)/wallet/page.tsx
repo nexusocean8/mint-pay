@@ -9,14 +9,8 @@ import {
   type FiroWalletInfo,
 } from '@/lib/api';
 import { useChain } from '@/lib/chain-context';
-import {
-  Copy,
-  Eye,
-  EyeOff,
-  CheckCircle,
-  XCircle,
-  Download,
-} from 'lucide-react';
+import { Copy, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
+import { isAxiosError } from 'axios';
 
 async function fetchWallet(chain: string): Promise<WalletInfo> {
   const { data } = await api.get('/wallet', { params: { chain } });
@@ -65,6 +59,33 @@ function XmrWallet({ data }: { data: XmrWalletInfo }) {
 }
 
 function FiroWallet({ data }: { data: FiroWalletInfo }) {
+  const { chain } = useChain();
+  const [address, setAddress] = useState('');
+  const [txid, setTxid] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handlePayout() {
+    setError(null);
+    setTxid(null);
+    setLoading(true);
+    try {
+      const { data: res } = await api.post(`/wallet?chain=${chain}`, {
+        address,
+      });
+      setTxid(res.txid);
+    } catch (err: unknown) {
+      const msg = isAxiosError(err)
+        ? (err.response?.data?.message ?? 'Payout failed')
+        : 'Payout failed';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const availableFiro = (data.availableBalance / 1e8).toFixed(2);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -76,7 +97,7 @@ function FiroWallet({ data }: { data: FiroWalletInfo }) {
           value={data.blockHeight.toLocaleString()}
           mono
         />
-        <Field label="Balance" value={`${data.balance} FIRO`} mono />
+        <Field label="Spark Balance" value={`${availableFiro} FIRO`} mono />
         <Field label="Keypool Size" value={data.keypoolSize.toString()} mono />
         {data.hdMasterKeyId && (
           <Field
@@ -87,15 +108,29 @@ function FiroWallet({ data }: { data: FiroWalletInfo }) {
           />
         )}
       </Section>
-      <Section title="Backup">
-        <a
-          href="/api/backup"
-          download
-          className="inline-flex items-center gap-2 text-xs text-zinc-200 bg-zinc-800 hover:bg-zinc-700 transition-colors px-3 py-2 rounded-md"
-        >
-          <Download size={13} />
-          Download wallet backup
-        </a>
+      <Section title="Payout">
+        <div className="space-y-3">
+          <input
+            type="text"
+            placeholder="Destination address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="w-full md:w-1/2 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
+          />
+          <button
+            onClick={handlePayout}
+            disabled={!address || loading}
+            className="mx-0 md:mx-2 inline-flex items-center gap-2 text-xs text-red-500 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors px-3 py-2 rounded-md"
+          >
+            {loading ? 'Sending…' : `Sweep ${availableFiro} FIRO`}
+          </button>
+          {txid && (
+            <p className="text-xs text-emerald-400 font-mono break-all">
+              Sent — txid: {txid}
+            </p>
+          )}
+          {error && <p className="text-xs text-red-400">{error}</p>}
+        </div>
       </Section>
     </div>
   );

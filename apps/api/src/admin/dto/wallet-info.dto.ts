@@ -31,8 +31,11 @@ export class WalletInfoResponseDto {
   @ApiPropertyOptional({ example: 1322631 })
   blockHeight?: number;
 
-  @ApiPropertyOptional({ example: 0.2 })
-  balance?: number;
+  @ApiPropertyOptional({ example: 100000000 })
+  availableBalance?: number;
+
+  @ApiPropertyOptional({ example: 0 })
+  unconfirmedBalance?: number;
 
   @ApiPropertyOptional({ example: 'fdec8781a3c6357dd808379283238a9e649ab5dd' })
   hdMasterKeyId?: string;

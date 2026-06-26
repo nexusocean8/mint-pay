@@ -11,7 +11,7 @@ export class FiroAdapter implements IChainAdapter {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _label: string,
   ): Promise<{ address: string; addressIndex: number }> {
-    const address = await this.firo.getNewAddress();
+    const address = await this.firo.getNewSparkAddress();
     return { address, addressIndex: 0 };
   }
 
@@ -44,5 +44,17 @@ export class FiroAdapter implements IChainAdapter {
 
   async getWalletInfo(): Promise<WalletInfoResponseDto> {
     return this.firo.getWalletInfo();
+  }
+
+  async getSparkBalance(): Promise<{
+    availableBalance: number;
+    unconfirmedBalance: number;
+    fullBalance: number;
+  }> {
+    return await this.firo.getSparkBalance();
+  }
+
+  async spendSpark(address: string, amount: number): Promise<string> {
+    return await this.firo.spendSpark(address, amount);
   }
 }

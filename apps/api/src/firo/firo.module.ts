@@ -11,7 +11,6 @@ import { FIRO_CLIENT, FiroClient } from './firo.constants';
 import { FiroService } from './firo.service';
 import { FiroScannerService } from './firo-scanner.service';
 import { Invoice, InvoiceSchema } from '../invoices/schemas/invoice.schema';
-import { Payment, PaymentSchema } from '../payments/schemas/payment.schema';
 import { WebhooksModule } from '../webhooks/webhooks.module';
 import { ScannerLockModule } from '../scanner/scanner-lock.module';
 import { SettingsModule } from '../settings/settings.module';
@@ -24,10 +23,7 @@ const INTERVAL_NAME = 'firo-payment-scanner-tick';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: Invoice.name, schema: InvoiceSchema },
-      { name: Payment.name, schema: PaymentSchema },
-    ]),
+    MongooseModule.forFeature([{ name: Invoice.name, schema: InvoiceSchema }]),
     ScannerLockModule,
     WebhooksModule,
     SettingsModule,

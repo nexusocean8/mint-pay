@@ -111,11 +111,11 @@ export default function OverviewPage() {
               />
               <Stat
                 label="Current balance"
-                value={`${Number(stats?.balance).toFixed(3) ?? '0.000'} FIRO`}
+                value={`${Number(stats?.balance).toFixed(2) ?? '0.00'} FIRO`}
               />
               <Stat
                 label="Total volume"
-                value={`${(Number(stats?.confirmedVolumeAtomic) / 1e8).toFixed(3)} FIRO`}
+                value={`${(Number(stats?.confirmedVolumeAtomic) / 1e8).toFixed(2)} FIRO`}
               />
             </div>
             <SyncBar

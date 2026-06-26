@@ -142,7 +142,7 @@ export default function InvoicesPage() {
                       inv.asset,
                     )}
                     <span className="ml-2 text-xs text-zinc-500">
-                      {inv.amountFiat} {inv.fiatCurrency}
+                      {inv.amountFiat.toFixed(2)} {inv.fiatCurrency}
                     </span>
                   </td>
                   <td className="px-4 py-3">

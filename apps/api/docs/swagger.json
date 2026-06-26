@@ -516,21 +516,33 @@
         ]
       }
     },
-    "/v1/admin/firo/backup": {
-      "get": {
-        "operationId": "AdminController_getWalletBackup",
+    "/v1/admin/payout": {
+      "post": {
+        "operationId": "AdminController_payout",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayoutDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "Wallet backup file stream",
+            "description": "",
             "content": {
-              "application/octet-stream": {
+              "application/json": {
                 "schema": {
-                  "type": "string",
-                  "format": "binary"
+                  "$ref": "#/components/schemas/PayoutResponseDto"
                 }
               }
             }
+          },
+          "400": {
+            "description": "Invalid address or no spendable balance"
           },
           "401": {
             "description": "Missing or invalid X-Admin-Api-Key header"
@@ -541,7 +553,7 @@
             "admin-key": []
           }
         ],
-        "summary": "Download a fresh wallet.dat backup",
+        "summary": "Sweep full Spark balance to address",
         "tags": [
           "admin"
         ]
@@ -1090,9 +1102,13 @@
             "type": "number",
             "example": 1322631
           },
-          "balance": {
+          "availableBalance": {
             "type": "number",
-            "example": 0.2
+            "example": 100000000
+          },
+          "unconfirmedBalance": {
+            "type": "number",
+            "example": 0
           },
           "hdMasterKeyId": {
             "type": "string",
@@ -1152,6 +1168,30 @@
           "total",
           "page",
           "limit"
+        ]
+      },
+      "PayoutDto": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "example": "sm1wp..."
+          }
+        },
+        "required": [
+          "address"
+        ]
+      },
+      "PayoutResponseDto": {
+        "type": "object",
+        "properties": {
+          "txid": {
+            "type": "string",
+            "example": "aee3b507ef84950062776442942668b6..."
+          }
+        },
+        "required": [
+          "txid"
         ]
       },
       "LiveResponseDto": {

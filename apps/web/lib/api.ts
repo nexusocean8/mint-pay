@@ -91,7 +91,8 @@ export interface XmrWalletInfo {
 export interface FiroWalletInfo {
   chain: 'firo';
   blockHeight: number;
-  balance: number;
+  availableBalance: number;
+  unconfirmedBalance: number;
   hdMasterKeyId?: string;
   keypoolSize: number;
 }

@@ -1,4 +1,4 @@
-import { Injectable, StreamableFile } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ChainsService } from '../chains/chains.service';
@@ -10,8 +10,6 @@ import {
 import { Invoice, InvoiceDocument } from '../invoices/schemas/invoice.schema';
 import { StatsResponseDto } from './dto/wallet-stats.dto';
 import { Chain } from '@mint-pay/types';
-import { createReadStream } from 'fs';
-import { unlink } from 'fs/promises';
 
 type LeanInvoice = Invoice & {
   _id: Types.ObjectId;
@@ -43,7 +41,10 @@ export class AdminService {
       : '0';
 
     const wallet = await this.chains.get(chain).getWalletInfo();
-    return { confirmedVolumeAtomic, balance: wallet.balance };
+    const balance =
+      chain === Chain.Firo ? (wallet.availableBalance ?? 0) / 1e8 : 0;
+
+    return { confirmedVolumeAtomic, balance };
   }
 
   async listInvoices(
@@ -93,26 +94,27 @@ export class AdminService {
     return { data, total, page, limit };
   }
 
-  async getWalletBackup(): Promise<StreamableFile> {
-    const adapter = this.chains.get(Chain.Firo);
-    if (!adapter.backupWallet) {
-      throw new Error('Backup not supported for this chain');
+  async payout(address: string): Promise<{ txid: string }> {
+    const isTransparent = /^[a-zA-Z34][1-9A-HJ-NP-Za-km-z]{25,40}$/.test(
+      address,
+    );
+    const isSpark = /^sm1[a-z0-9]{100,}$/.test(address);
+    if (!isTransparent && !isSpark) {
+      throw new BadRequestException('Invalid address');
     }
-    const wallet = await adapter.backupWallet();
-    const file = createReadStream(wallet);
 
-    const cleanup = () => {
-      unlink(wallet).catch((err) =>
-        console.log('Failed to delete wallet backup:', err),
-      );
-    };
+    const adapter = this.chains.get(Chain.Firo);
+    if (!adapter.getSparkBalance || !adapter.spendSpark) {
+      throw new BadRequestException('Payout not supported for this chain');
+    }
 
-    file.once('close', cleanup);
-    file.once('error', cleanup);
+    const balance = await adapter.getSparkBalance();
+    if (balance.availableBalance === 0) {
+      throw new BadRequestException('No spendable balance');
+    }
 
-    return new StreamableFile(file, {
-      type: 'application/octet-stream',
-      disposition: 'attachment; filename="wallet.dat"',
-    });
+    const amount = balance.availableBalance / 1e8;
+    const txid = await adapter.spendSpark(address, amount);
+    return { txid };
   }
 }

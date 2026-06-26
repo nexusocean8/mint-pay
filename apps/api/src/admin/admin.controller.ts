@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Query,
-  StreamableFile,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -12,7 +6,7 @@ import {
   ApiOkResponse,
   ApiUnauthorizedResponse,
   ApiQuery,
-  ApiProduces,
+  ApiBadRequestResponse,
 } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { AdminKeyGuard } from '../auth/admin-key.guard';
@@ -23,6 +17,7 @@ import {
 } from './dto/invoice-list.dto';
 import { StatsResponseDto } from './dto/wallet-stats.dto';
 import { Chain } from '@mint-pay/types';
+import { PayoutDto, PayoutResponseDto } from './dto/payout.dto';
 
 @ApiTags('admin')
 @ApiSecurity('admin-key')
@@ -60,14 +55,13 @@ export class AdminController {
     return this.admin.listInvoices(query);
   }
 
-  @Get('firo/backup')
-  @ApiOperation({ summary: 'Download a fresh wallet.dat backup' })
-  @ApiProduces('application/octet-stream')
-  @ApiOkResponse({
-    description: 'Wallet backup file stream',
-    schema: { type: 'string', format: 'binary' },
+  @Post('payout')
+  @ApiOperation({ summary: 'Sweep full Spark balance to address' })
+  @ApiOkResponse({ type: PayoutResponseDto })
+  @ApiBadRequestResponse({
+    description: 'Invalid address or no spendable balance',
   })
-  async getWalletBackup(): Promise<StreamableFile> {
-    return await this.admin.getWalletBackup();
+  async payout(@Body() dto: PayoutDto): Promise<PayoutResponseDto> {
+    return this.admin.payout(dto.address);
   }
 }

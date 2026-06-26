@@ -1,17 +1,8 @@
-import {
-  Inject,
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { FIRO_CLIENT } from './firo.constants';
 import type { FiroClient } from './firo.constants';
 import { WalletInfoResponseDto } from '../admin/dto/wallet-info.dto';
 import { Chain } from '@mint-pay/types';
-import path from 'path';
-import { unlink } from 'fs/promises';
-import { existsSync } from 'fs';
 
 @Injectable()
 export class FiroService implements OnModuleInit {
@@ -32,8 +23,9 @@ export class FiroService implements OnModuleInit {
     return this.client;
   }
 
-  async getNewAddress(): Promise<string> {
-    return await this.client.getNewAddress();
+  async getNewSparkAddress(): Promise<string> {
+    const addresses = await this.client.call<string[]>('getnewsparkaddress');
+    return addresses[0];
   }
 
   async getBlockCount(): Promise<number> {
@@ -64,33 +56,41 @@ export class FiroService implements OnModuleInit {
   }
 
   async getWalletInfo(): Promise<WalletInfoResponseDto> {
-    const [blockHeight, walletInfo] = await Promise.all([
+    const [blockHeight, walletInfo, sparkBalance] = await Promise.all([
       this.getBlockCount(),
       this.client.getWalletInfo(),
+      this.getSparkBalance(),
     ]);
     return {
       chain: Chain.Firo,
       blockHeight,
-      balance: walletInfo.balance,
+      availableBalance: sparkBalance.availableBalance,
+      unconfirmedBalance: sparkBalance.unconfirmedBalance,
       hdMasterKeyId: walletInfo.hdmasterkeyid,
       keypoolSize: walletInfo.keypoolsize,
     };
   }
 
-  async backupWallet(): Promise<string> {
-    const wallet = path.join(__dirname, 'wallet.dat');
+  async getSparkBalance(): Promise<{
+    availableBalance: number;
+    unconfirmedBalance: number;
+    fullBalance: number;
+  }> {
+    const raw =
+      await this.client.call<Record<string, number>>('getsparkbalance');
 
-    try {
-      if (existsSync(wallet)) {
-        await unlink(wallet);
-      }
+    this.log.debug(`Raw sparkbalance: ${JSON.stringify(raw)}`);
 
-      await this.client.call<void>('backupwallet', [wallet]);
+    return {
+      availableBalance: raw['availableBalance'] ?? 0,
+      unconfirmedBalance: raw['unconfirmedBalance'] ?? 0,
+      fullBalance: raw['fullBalance'] ?? 0,
+    };
+  }
 
-      return wallet;
-    } catch (err) {
-      this.log.debug('Failed to fetch wallet:', err);
-      throw new InternalServerErrorException('Failed to fetch wallet.');
-    }
+  async spendSpark(address: string, amount: number): Promise<string> {
+    return await this.client.call<string>('sendspark', {
+      [address]: { amount, subtractFee: true },
+    });
   }
 }

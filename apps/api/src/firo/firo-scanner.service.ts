@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model } from 'mongoose';
 import { Invoice, InvoiceDocument } from '../invoices/schemas/invoice.schema';
-import { Payment, PaymentDocument } from '../payments/schemas/payment.schema';
 import { FiroService } from './firo.service';
 import { ScannerLockService } from '../scanner/scanner-lock.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
@@ -17,14 +16,6 @@ const NON_TERMINAL: InvoiceStatus[] = [
   InvoiceStatus.Seen,
   InvoiceStatus.Underpaid,
 ];
-const SAT_PER_FIRO = 100_000_000n;
-
-function firoToSat(decimal: string | number): bigint {
-  const s = typeof decimal === 'number' ? decimal.toFixed(8) : decimal;
-  const [whole, frac = ''] = s.split('.');
-  const fracPadded = (frac + '00000000').slice(0, 8);
-  return BigInt(whole) * SAT_PER_FIRO + BigInt(fracPadded);
-}
 
 @Injectable()
 export class FiroScannerService {
@@ -34,8 +25,6 @@ export class FiroScannerService {
   constructor(
     @InjectModel(Invoice.name)
     private readonly invoices: Model<InvoiceDocument>,
-    @InjectModel(Payment.name)
-    private readonly payments: Model<PaymentDocument>,
     private readonly firo: FiroService,
     private readonly lock: ScannerLockService,
     private readonly webhooks: WebhooksService,
@@ -92,133 +81,61 @@ export class FiroScannerService {
 
   private async processInvoice(
     inv: InvoiceDocument,
-    tipHeight: number,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _tipHeight: number,
   ): Promise<void> {
-    let txids: string[];
+    let balanceRaw: Record<string, number>;
     try {
-      txids = await this.firo.rpc.getAddressTxIds(inv.address);
+      balanceRaw = await this.firo.rpc.call(
+        'getsparkaddressbalance',
+        inv.address,
+      );
     } catch (err) {
-      this.log.warn(`getAddressTxIds failed for ${inv.address}:${err}`);
+      this.log.warn(`getsparkaddressbalance failed for ${inv.address}: ${err}`);
       return;
     }
-    if (!txids || txids.length === 0) return;
 
-    this.log.log(`Tick: ${txids.length} txid(s) for address=${inv.address}`);
+    const available = balanceRaw['availableBalance: '];
+    const unconfirmed = balanceRaw['unconfirmedBalance: '];
+    const full = balanceRaw['fullBalance: '];
 
-    const known = await this.payments
-      .find({ chain: CHAIN, invoiceId: inv._id }, { txHash: 1 })
-      .lean();
+    if (!full) return;
 
-    const knownKeys = new Set(known.map((p) => p.txHash));
+    const availableAtomic = BigInt(available ?? 0);
+    const unconfirmedAtomic = BigInt(unconfirmed ?? 0);
+    const receivedAtomic = availableAtomic + unconfirmedAtomic;
 
-    let changed = false;
-
-    for (const txid of txids) {
-      const tx = await this.firo.rpc.getRawTransaction(txid);
-      const outs = tx.vout ?? [];
-
-      for (const out of outs) {
-        const addrs = out.scriptPubKey?.addresses ?? [];
-        if (!addrs.includes(inv.address)) continue;
-
-        const txHashKey = `${txid}:${out.n}`;
-
-        if (!knownKeys.has(txHashKey)) {
-          await this.payments
-            .create({
-              chain: CHAIN,
-              invoiceId: inv._id,
-              address: inv.address,
-              addressIndex: inv.addressIndex,
-              txHash: txHashKey,
-              amountAtomic: firoToSat(out.value).toString(),
-              confirmations: 0,
-              unlocked: true,
-              firstSeenAt: new Date(),
-            })
-            .catch((err: { code?: number }) => {
-              if (err.code !== 11000) throw err;
-            });
-          changed = true;
-        }
-      }
-
-      const blockHash = tx.blockhash;
-      if (blockHash) {
-        const block = await this.firo.getBlockWithChainlock(blockHash);
-        const conf = tipHeight - block.height + 1;
-        const res = await this.payments.updateMany(
-          {
-            chain: CHAIN,
-            invoiceId: inv._id,
-            txHash: { $regex: `^${txid}:` },
-          },
-          {
-            $set: {
-              confirmations: conf,
-              blockHeight: block.height,
-              ...(conf >= 1 ? { confirmedAt: new Date() } : {}),
-            },
-          },
-        );
-
-        if (res.modifiedCount > 0) changed = true;
-      }
-    }
-
-    if (changed || NON_TERMINAL.includes(inv.status)) {
-      await this.recomputeInvoice(inv._id);
-    }
-  }
-
-  private async recomputeInvoice(invoiceId: Types.ObjectId): Promise<void> {
-    const inv = await this.invoices.findOne({ _id: invoiceId, chain: CHAIN });
-
-    if (!inv) return;
-    if (!NON_TERMINAL.includes(inv.status)) return;
-
-    const pays = await this.payments.find({ chain: CHAIN, invoiceId });
-    if (pays.length === 0) return;
-
-    const required = inv.confirmationsRequired;
-    const totalReceived = pays.reduce(
-      (acc, p) => acc + BigInt(p.amountAtomic),
-      0n,
-    );
     const owed = BigInt(inv.amountAtomic);
-    const minConfirmations = pays.reduce(
-      (acc, p) => Math.min(acc, p.confirmations),
-      Number.POSITIVE_INFINITY,
-    );
-    const isConfirmed = minConfirmations >= required;
 
     const updates: Partial<Invoice> = {
-      receivedAtomic: totalReceived.toString(),
-      confirmations: minConfirmations === Infinity ? 0 : minConfirmations,
+      receivedAtomic: receivedAtomic.toString(),
     };
 
     let nextStatus: InvoiceStatus = inv.status;
     let webhookEvent: WebhookEvent | null = null;
 
-    if (inv.status === InvoiceStatus.Pending) {
+    if (inv.status === InvoiceStatus.Pending && full > 0) {
       nextStatus = InvoiceStatus.Seen;
       updates.firstSeenAt = inv.firstSeenAt ?? new Date();
+      updates.confirmations = 0;
       webhookEvent = WebhookEvent.InvoiceSeen;
     }
 
-    if (isConfirmed) {
-      if (totalReceived >= owed) {
+    if (availableAtomic > 0n) {
+      if (availableAtomic >= owed) {
         nextStatus = InvoiceStatus.Confirmed;
+        updates.confirmations = 1;
         updates.paidAt = new Date();
         webhookEvent = WebhookEvent.InvoiceConfirmed;
       } else {
         nextStatus = InvoiceStatus.Underpaid;
+        updates.confirmations = 1;
         webhookEvent = WebhookEvent.InvoiceUnderpaid;
       }
     }
 
-    const statusChanged = nextStatus !== inv.status;
     updates.status = nextStatus;
+    const statusChanged = nextStatus !== inv.status;
 
     await this.invoices.updateOne({ _id: inv._id }, { $set: updates });
 
