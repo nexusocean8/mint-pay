@@ -3,14 +3,36 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
+  ActionIcon,
+  Alert,
+  Box,
+  Button,
+  Group,
+  Paper,
+  Skeleton,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+  Tooltip,
+} from '@mantine/core';
+import {
+  IconCheck,
+  IconCircleCheck,
+  IconCircleX,
+  IconCopy,
+  IconEye,
+  IconEyeOff,
+} from '@tabler/icons-react';
+import { isAxiosError } from 'axios';
+import {
   api,
   type WalletInfo,
   type XmrWalletInfo,
   type FiroWalletInfo,
 } from '@/lib/api';
 import { useChain } from '@/lib/chain-context';
-import { Copy, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
-import { isAxiosError } from 'axios';
+import { CARD_BORDER, HEADING, MUTED, PRIMARY } from '@/lib/theme';
 
 async function fetchWallet(chain: string): Promise<WalletInfo> {
   const { data } = await api.get('/wallet', { params: { chain } });
@@ -25,9 +47,22 @@ export default function WalletPage() {
     refetchInterval: 15_000,
   });
 
-  if (isLoading) return <p className="text-sm text-zinc-500">Loading…</p>;
-  if (!data)
-    return <p className="text-sm text-red-400">Failed to load wallet info</p>;
+  if (isLoading) {
+    return (
+      <Stack gap="xl">
+        <Skeleton height={28} width={200} radius="sm" />
+        <Skeleton height={160} radius="sm" />
+      </Stack>
+    );
+  }
+
+  if (!data) {
+    return (
+      <Text size="sm" c="red">
+        Failed to load wallet info
+      </Text>
+    );
+  }
 
   if (chain === 'firo') return <FiroWallet data={data as FiroWalletInfo} />;
   return <XmrWallet data={data as XmrWalletInfo} />;
@@ -35,26 +70,36 @@ export default function WalletPage() {
 
 function XmrWallet({ data }: { data: XmrWalletInfo }) {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-zinc-100">Wallet — XMR</h1>
-        <Badge ok={data.synced}>{data.synced ? 'Synced' : 'Syncing'}</Badge>
-      </div>
-      <Section title="Keys & Identity">
-        <Field
-          label="Primary Address"
-          value={data.primaryAddress}
-          mono
-          copyable
-        />
-        <Field label="View Key" value={data.viewKey} mono copyable masked />
-        <Field
-          label="Restore Height"
-          value={data.restoreHeight.toLocaleString()}
-          mono
-        />
-      </Section>
-    </div>
+    <Box maw={640}>
+      <Stack gap="xl">
+        <Group justify="space-between" align="center">
+          <Title
+            order={2}
+            style={{ fontFamily: HEADING, letterSpacing: '-0.02em' }}
+          >
+            Wallet — XMR
+          </Title>
+          <SyncBadge
+            ok={data.synced}
+            label={data.synced ? 'Synced' : 'Syncing'}
+          />
+        </Group>
+        <SectionCard title="Keys & Identity">
+          <Field
+            label="Primary Address"
+            value={data.primaryAddress}
+            mono
+            copyable
+          />
+          <Field label="View Key" value={data.viewKey} mono copyable masked />
+          <Field
+            label="Restore Height"
+            value={data.restoreHeight.toLocaleString()}
+            mono
+          />
+        </SectionCard>
+      </Stack>
+    </Box>
   );
 }
 
@@ -64,6 +109,8 @@ function FiroWallet({ data }: { data: FiroWalletInfo }) {
   const [txid, setTxid] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const availableFiro = (data.availableBalance / 1e8).toFixed(2);
 
   async function handlePayout() {
     setError(null);
@@ -84,55 +131,90 @@ function FiroWallet({ data }: { data: FiroWalletInfo }) {
     }
   }
 
-  const availableFiro = (data.availableBalance / 1e8).toFixed(2);
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-zinc-100">Wallet — FIRO</h1>
-      </div>
-      <Section title="Node">
-        <Field
-          label="Block Height"
-          value={data.blockHeight.toLocaleString()}
-          mono
-        />
-        <Field label="Spark Balance" value={`${availableFiro} FIRO`} mono />
-        <Field label="Keypool Size" value={data.keypoolSize.toString()} mono />
-        {data.hdMasterKeyId && (
+    <Box maw={640}>
+      <Stack gap="xl">
+        <Title
+          order={2}
+          style={{ fontFamily: HEADING, letterSpacing: '-0.02em' }}
+        >
+          Wallet — FIRO
+        </Title>
+
+        <SectionCard title="Node">
           <Field
-            label="HD Master Key ID"
-            value={data.hdMasterKeyId}
+            label="Block Height"
+            value={data.blockHeight.toLocaleString()}
             mono
-            copyable
           />
-        )}
-      </Section>
-      <Section title="Payout">
-        <div className="space-y-3">
-          <input
-            type="text"
-            placeholder="Destination address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="w-full md:w-1/2 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-2 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-500"
+          <Field label="Spark Balance" value={`${availableFiro} FIRO`} mono />
+          <Field
+            label="Keypool Size"
+            value={data.keypoolSize.toString()}
+            mono
           />
-          <button
-            onClick={handlePayout}
-            disabled={!address || loading}
-            className="mx-0 md:mx-2 inline-flex items-center gap-2 text-xs text-red-500 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors px-3 py-2 rounded-md"
-          >
-            {loading ? 'Sending…' : `Sweep ${availableFiro} FIRO`}
-          </button>
-          {txid && (
-            <p className="text-xs text-emerald-400 font-mono break-all">
-              Sent — txid: {txid}
-            </p>
+          {data.hdMasterKeyId && (
+            <Field
+              label="HD Master Key ID"
+              value={data.hdMasterKeyId}
+              mono
+              copyable
+            />
           )}
-          {error && <p className="text-xs text-red-400">{error}</p>}
-        </div>
-      </Section>
-    </div>
+        </SectionCard>
+
+        <SectionCard title="Payout">
+          <Stack gap="sm">
+            <TextInput
+              placeholder="Destination address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              style={{ maxWidth: 480 }}
+              styles={{
+                input: {
+                  fontFamily: HEADING,
+                  fontSize: 12,
+                },
+              }}
+            />
+            <Box>
+              <Button
+                onClick={handlePayout}
+                disabled={!address || loading}
+                loading={loading}
+                color="red"
+                variant="outline"
+                size="xs"
+                style={{ fontFamily: HEADING }}
+              >
+                {loading ? 'Sending…' : `Sweep ${availableFiro} FIRO`}
+              </Button>
+            </Box>
+            {txid && (
+              <Alert
+                color="green"
+                radius="sm"
+                p="sm"
+                styles={{
+                  message: {
+                    fontFamily: HEADING,
+                    fontSize: 12,
+                    wordBreak: 'break-all',
+                  },
+                }}
+              >
+                Sent — txid: {txid}
+              </Alert>
+            )}
+            {error && (
+              <Alert color="red" radius="sm" p="sm">
+                {error}
+              </Alert>
+            )}
+          </Stack>
+        </SectionCard>
+      </Stack>
+    </Box>
   );
 }
 
@@ -161,42 +243,70 @@ function Field({
   const display = masked && !revealed ? '•'.repeat(16) : value;
 
   return (
-    <div className="flex gap-4 py-2.5 border-b border-zinc-800 last:border-0 items-start">
-      <span className="text-xs text-zinc-500 w-36 shrink-0 pt-0.5">
+    <Group
+      gap="md"
+      py="xs"
+      wrap="nowrap"
+      align="flex-start"
+      style={{ borderBottom: '1px solid var(--mantine-color-dark-5)' }}
+    >
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase',
+          color: MUTED,
+          fontFamily: HEADING,
+          width: 140,
+          flexShrink: 0,
+          paddingTop: 2,
+        }}
+      >
         {label}
-      </span>
-      <span
-        className={`text-xs ${mono ? 'font-mono' : ''} text-zinc-200 break-all flex-1`}
+      </Text>
+      <Text
+        style={{
+          fontSize: 12,
+          fontFamily: mono ? HEADING : undefined,
+          color: 'var(--mantine-color-dark-0)',
+          wordBreak: 'break-all',
+          flex: 1,
+        }}
       >
         {display}
-      </span>
-      <div className="flex items-center gap-2 shrink-0">
+      </Text>
+      <Group gap={4} style={{ flexShrink: 0 }}>
         {masked && (
-          <button
-            onClick={() => setRevealed((r) => !r)}
-            className="text-zinc-500 hover:text-zinc-200 transition-colors"
-          >
-            {revealed ? <EyeOff size={13} /> : <Eye size={13} />}
-          </button>
+          <Tooltip label={revealed ? 'Hide' : 'Reveal'} position="top">
+            <ActionIcon
+              variant="subtle"
+              size="sm"
+              color="gray"
+              onClick={() => setRevealed((r) => !r)}
+            >
+              {revealed ? <IconEyeOff size={13} /> : <IconEye size={13} />}
+            </ActionIcon>
+          </Tooltip>
         )}
         {copyable && (
-          <button
-            onClick={copy}
-            className="text-zinc-500 hover:text-zinc-200 transition-colors"
-          >
-            {copied ? (
-              <CheckCircle size={13} className="text-emerald-400" />
-            ) : (
-              <Copy size={13} />
-            )}
-          </button>
+          <Tooltip label={copied ? 'Copied!' : 'Copy'} position="top">
+            <ActionIcon
+              variant="subtle"
+              size="sm"
+              color={copied ? 'green' : 'gray'}
+              onClick={copy}
+            >
+              {copied ? <IconCheck size={13} /> : <IconCopy size={13} />}
+            </ActionIcon>
+          </Tooltip>
         )}
-      </div>
-    </div>
+      </Group>
+    </Group>
   );
 }
 
-function Section({
+function SectionCard({
   title,
   children,
 }: {
@@ -204,24 +314,52 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 space-y-1">
-      <h2 className="text-sm font-medium text-zinc-400 mb-3">{title}</h2>
+    <Paper
+      p="lg"
+      radius="sm"
+      style={{
+        background: 'var(--mantine-color-dark-7)',
+        border: `1px solid var(--mantine-color-dark-5)`,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: MUTED,
+          fontFamily: HEADING,
+          marginBottom: 16,
+        }}
+      >
+        {title}
+      </Text>
       {children}
-    </div>
+    </Paper>
   );
 }
 
-function Badge({ ok, children }: { ok: boolean; children: React.ReactNode }) {
+function SyncBadge({ ok, label }: { ok: boolean; label: string }) {
   return (
-    <span
-      className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full ${
-        ok
-          ? 'bg-emerald-900/50 text-emerald-400'
-          : 'bg-yellow-900/50 text-yellow-400'
-      }`}
+    <Group
+      gap={6}
+      style={{
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: '0.08em',
+        fontFamily: HEADING,
+        color: ok ? PRIMARY : '#fcd34d',
+        background: ok ? `${PRIMARY}11` : 'rgba(252,211,77,0.1)',
+        border: `1px solid ${ok ? PRIMARY + '33' : 'rgba(252,211,77,0.25)'}`,
+        borderRadius: 99,
+        padding: '4px 12px',
+      }}
     >
-      {ok ? <CheckCircle size={12} /> : <XCircle size={12} />}
-      {children}
-    </span>
+      {ok ? <IconCircleCheck size={13} /> : <IconCircleX size={13} />}
+      <Text style={{ fontFamily: HEADING, fontSize: 11, fontWeight: 700 }}>
+        {label}
+      </Text>
+    </Group>
   );
 }

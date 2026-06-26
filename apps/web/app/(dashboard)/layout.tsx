@@ -1,27 +1,322 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import {
-  Activity,
-  FileText,
-  Wallet,
-  Settings,
-  User,
-  Menu,
-  X,
-} from 'lucide-react';
+  AppShell,
+  Box,
+  Burger,
+  Divider,
+  Group,
+  Select,
+  Stack,
+  Text,
+  Tooltip,
+  UnstyledButton,
+} from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconFileInvoice,
+  IconLayoutDashboard,
+  IconLogout,
+  IconSettings,
+  IconUser,
+  IconWallet,
+} from '@tabler/icons-react';
 import { ChainProvider, useChain } from '@/lib/chain-context';
 import { Chain } from '@mint-pay/types';
+import { BORDER, CARD_BORDER, HEADING, PRIMARY } from '@/lib/theme';
 
-const nav = [
-  { href: '/', label: 'Overview', icon: Activity },
-  { href: '/invoices', label: 'Invoices', icon: FileText },
-  { href: '/wallet', label: 'Wallet', icon: Wallet },
-  { href: '/settings', label: 'Settings', icon: Settings },
-  { href: '/profile', label: 'Profile', icon: User },
+const NAV_ITEMS = [
+  { icon: IconLayoutDashboard, label: 'Overview', path: '/' },
+  { icon: IconFileInvoice, label: 'Invoices', path: '/invoices' },
+  { icon: IconWallet, label: 'Wallet', path: '/wallet' },
+  { icon: IconSettings, label: 'Settings', path: '/settings' },
+  { icon: IconUser, label: 'Profile', path: '/profile' },
 ];
+
+const ACTIVE_BG = 'var(--mantine-color-dark-6)';
+const HOVER_BG = 'var(--mantine-color-dark-5)';
+const INACTIVE_COLOR = 'var(--mantine-color-dark-1)';
+
+interface NavItemProps {
+  icon: React.FC<{ size?: number; stroke?: number }>;
+  label: string;
+  path: string;
+  collapsed: boolean;
+  onClick?: () => void;
+}
+
+function NavItem({
+  icon: Icon,
+  label,
+  path,
+  collapsed,
+  onClick,
+}: NavItemProps) {
+  const pathname = usePathname();
+  const [hovered, setHovered] = useState(false);
+  const active =
+    pathname === path || (path !== '/' && pathname.startsWith(path));
+
+  return (
+    <Tooltip label={label} position="right" disabled={!collapsed}>
+      <UnstyledButton
+        component={Link}
+        href={path}
+        onClick={onClick}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          padding: '10px 12px',
+          borderRadius: 8,
+          textDecoration: 'none',
+          borderLeft: active ? `2px solid ${PRIMARY}` : '2px solid transparent',
+          backgroundColor: active
+            ? ACTIVE_BG
+            : hovered
+              ? HOVER_BG
+              : 'transparent',
+          color: active || hovered ? PRIMARY : INACTIVE_COLOR,
+          transition: 'background-color 100ms ease, color 100ms ease',
+        }}
+      >
+        <Icon size={20} stroke={1.5} />
+        {!collapsed && (
+          <Text size="sm" fw={500} style={{ fontFamily: HEADING }}>
+            {label}
+          </Text>
+        )}
+      </UnstyledButton>
+    </Tooltip>
+  );
+}
+
+function DashboardShell({ children }: { children: React.ReactNode }) {
+  const [mobileOpen, { toggle: toggleMobile }] = useDisclosure();
+  const [collapsed, setCollapsed] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutHovered, setLogoutHovered] = useState(false);
+  const [collapseHovered, setCollapseHovered] = useState(false);
+  const { chain, setChain, enabledChains } = useChain();
+
+  const sidebarWidth = collapsed ? 60 : 220;
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // ignore
+    } finally {
+      window.location.href = '/login';
+    }
+  };
+
+  const chainOptions =
+    enabledChains.length > 0
+      ? enabledChains.map((c) => ({ value: c, label: c.toUpperCase() }))
+      : [{ value: Chain.Firo, label: 'FIRO' }];
+
+  return (
+    <AppShell
+      navbar={{
+        width: sidebarWidth,
+        breakpoint: 'sm',
+        collapsed: { mobile: !mobileOpen },
+      }}
+      padding="xl"
+    >
+      <AppShell.Navbar
+        style={{
+          background: 'var(--mantine-color-dark-7)',
+          borderRight: `1px solid ${CARD_BORDER}`,
+        }}
+        p="xs"
+      >
+        {/* Logo */}
+        <Box
+          style={{
+            padding: '16px 12px',
+            borderBottom: `1px solid ${CARD_BORDER}`,
+            marginBottom: 8,
+          }}
+        >
+          <Group justify="space-between" align="center">
+            <Link
+              href="/"
+              style={{
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <img
+                src="/logo.png"
+                alt="Mintit"
+                height={48}
+                style={{ width: 'auto' }}
+              />
+              {!collapsed && (
+                <Text
+                  style={{
+                    fontFamily: HEADING,
+                    fontSize: 24,
+                    fontWeight: 700,
+                    color: 'var(--mantine-color-dark-0)',
+                  }}
+                >
+                  mint<span style={{ color: PRIMARY }}>it</span>
+                </Text>
+              )}
+            </Link>
+            <Burger
+              opened={mobileOpen}
+              onClick={toggleMobile}
+              hiddenFrom="sm"
+              size="sm"
+              color={PRIMARY}
+            />
+          </Group>
+        </Box>
+
+        {/* Chain switcher */}
+        {!collapsed && (
+          <Box px={4} mb={8}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: 600,
+                letterSpacing: '0.1em',
+                color: 'var(--mantine-color-dark-2)',
+                textTransform: 'uppercase',
+                marginBottom: 6,
+                paddingLeft: 4,
+              }}
+            >
+              Chain
+            </Text>
+            <Select
+              data={chainOptions}
+              value={chain}
+              onChange={(v) => v && setChain(v as Chain)}
+              size="xs"
+              styles={{
+                input: {
+                  background: 'var(--mantine-color-dark-6)',
+                  border: `1px solid ${CARD_BORDER}`,
+                  color: PRIMARY,
+                  fontFamily: HEADING,
+                  fontWeight: 600,
+                  fontSize: 12,
+                },
+              }}
+            />
+          </Box>
+        )}
+
+        <Divider color={BORDER} mb={8} />
+
+        {/* Nav items */}
+        <Stack gap={2} flex={1}>
+          {NAV_ITEMS.map((item) => (
+            <NavItem
+              key={item.path}
+              {...item}
+              collapsed={collapsed}
+              onClick={toggleMobile}
+            />
+          ))}
+        </Stack>
+
+        {/* Bottom */}
+        <Box>
+          <Divider color={BORDER} mb={8} />
+
+          <Tooltip label="Sign out" position="right" disabled={!collapsed}>
+            <UnstyledButton
+              onClick={handleLogout}
+              disabled={loggingOut}
+              onMouseEnter={() => setLogoutHovered(true)}
+              onMouseLeave={() => setLogoutHovered(false)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                padding: '10px 12px',
+                width: '100%',
+                borderRadius: 8,
+                backgroundColor:
+                  logoutHovered && !loggingOut ? HOVER_BG : 'transparent',
+                color:
+                  logoutHovered && !loggingOut ? '#f87171' : INACTIVE_COLOR,
+                opacity: loggingOut ? 0.6 : 1,
+                cursor: loggingOut ? 'not-allowed' : 'pointer',
+                transition: 'background-color 100ms ease, color 100ms ease',
+              }}
+            >
+              <IconLogout size={20} stroke={1.5} />
+              {!collapsed && (
+                <Text size="sm" fw={500} style={{ fontFamily: HEADING }}>
+                  Sign out
+                </Text>
+              )}
+            </UnstyledButton>
+          </Tooltip>
+
+          <Tooltip label={collapsed ? 'Expand' : 'Collapse'} position="right">
+            <UnstyledButton
+              onClick={() => setCollapsed((c) => !c)}
+              onMouseEnter={() => setCollapseHovered(true)}
+              onMouseLeave={() => setCollapseHovered(false)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: collapsed ? 'center' : 'flex-end',
+                padding: '8px 12px',
+                width: '100%',
+                borderRadius: 8,
+                backgroundColor: collapseHovered ? HOVER_BG : 'transparent',
+                color: collapseHovered
+                  ? 'var(--mantine-color-dark-0)'
+                  : 'var(--mantine-color-dark-2)',
+                transition: 'background-color 100ms ease, color 100ms ease',
+              }}
+            >
+              {collapsed ? (
+                <IconChevronRight size={16} />
+              ) : (
+                <Group gap={6}>
+                  <Text size="xs" c="dimmed" style={{ fontFamily: HEADING }}>
+                    Collapse
+                  </Text>
+                  <IconChevronLeft size={16} />
+                </Group>
+              )}
+            </UnstyledButton>
+          </Tooltip>
+        </Box>
+      </AppShell.Navbar>
+
+      <AppShell.Main
+        style={{
+          background: 'var(--mantine-color-dark-8)',
+          minHeight: '100vh',
+        }}
+      >
+        {children}
+      </AppShell.Main>
+    </AppShell>
+  );
+}
 
 export default function DashboardLayout({
   children,
@@ -32,119 +327,5 @@ export default function DashboardLayout({
     <ChainProvider>
       <DashboardShell>{children}</DashboardShell>
     </ChainProvider>
-  );
-}
-
-function DashboardShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const [open, setOpen] = useState(false);
-  const { chain, setChain, enabledChains } = useChain();
-
-  return (
-    <div className="flex h-screen">
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/60 z-20 md:hidden"
-          onClick={() => setOpen(false)}
-        />
-      )}
-
-      <aside
-        className={`
-          fixed inset-y-0 left-0 z-30 w-56 bg-zinc-900 border-r border-zinc-800 flex flex-col
-          transform transition-transform duration-200
-          ${open ? 'translate-x-0' : '-translate-x-full'}
-          md:relative md:translate-x-0 md:flex
-        `}
-      >
-        <div className="px-5 py-5 border-b border-zinc-800 flex items-center justify-between">
-          <span className="text-sm font-semibold tracking-widest text-green-400 uppercase">
-            Mint Payments
-          </span>
-          <button
-            onClick={() => setOpen(false)}
-            className="md:hidden text-zinc-400 hover:text-zinc-100"
-          >
-            <X size={16} />
-          </button>
-        </div>
-
-        {/* Chain selector */}
-        <div className="px-3 pt-4 pb-2">
-          <p className="px-3 mb-1 text-xs text-zinc-500 uppercase tracking-wider">
-            Chain
-          </p>
-          <select
-            value={chain}
-            onChange={(e) => setChain(e.target.value as Chain)}
-            className="w-full px-3 py-1.5 text-sm font-medium rounded-md border border-zinc-700 bg-zinc-900 text-green-400 cursor-pointer focus:outline-none focus:border-green-500 transition-colors"
-          >
-            {enabledChains.map((c) => (
-              <option key={c} value={c} className="text-zinc-100 bg-zinc-900">
-                {c.toUpperCase()}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <nav className="flex-1 px-3 py-2 space-y-1">
-          {nav.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                  active
-                    ? 'bg-zinc-800 text-zinc-100'
-                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50'
-                }`}
-              >
-                <Icon size={16} />
-                {label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="px-3 py-4 border-t border-zinc-800">
-          <LogoutButton />
-        </div>
-      </aside>
-
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-zinc-900 border-b border-zinc-800">
-          <button
-            onClick={() => setOpen(true)}
-            className="text-zinc-400 hover:text-zinc-100"
-          >
-            <Menu size={20} />
-          </button>
-          <span className="text-sm font-semibold tracking-widest text-green-400 uppercase">
-            Payments Admin
-          </span>
-        </header>
-        <main className="flex-1 overflow-y-auto bg-zinc-950 p-4 md:p-8">
-          {children}
-        </main>
-      </div>
-    </div>
-  );
-}
-
-function LogoutButton() {
-  async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.href = '/login';
-  }
-
-  return (
-    <button
-      onClick={handleLogout}
-      className="w-full text-left px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50 rounded-md transition-colors"
-    >
-      Sign out
-    </button>
   );
 }

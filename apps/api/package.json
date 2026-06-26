@@ -53,7 +53,6 @@
     "@swc/core": "^1.15.40",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
-    "@types/mongoose": "^5.11.97",
     "@types/node": "^24.12.4",
     "@types/supertest": "^7.2.0",
     "eslint": "^9.39.4",

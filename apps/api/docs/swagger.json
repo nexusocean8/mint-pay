@@ -10,9 +10,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "App"
-        ]
+        "tags": ["App"]
       }
     },
     "/v1/chains": {
@@ -24,9 +22,7 @@
             "description": ""
           }
         },
-        "tags": [
-          "Chains"
-        ]
+        "tags": ["Chains"]
       }
     },
     "/v1/admin/settings": {
@@ -54,9 +50,7 @@
           }
         ],
         "summary": "Get live tunable settings",
-        "tags": [
-          "admin"
-        ]
+        "tags": ["admin"]
       },
       "put": {
         "operationId": "SettingsController_update",
@@ -92,9 +86,7 @@
           }
         ],
         "summary": "Update live tunable settings (partial)",
-        "tags": [
-          "admin"
-        ]
+        "tags": ["admin"]
       }
     },
     "/v1/auth/status": {
@@ -114,9 +106,7 @@
           }
         },
         "summary": "Check whether an admin user has been registered",
-        "tags": [
-          "auth"
-        ]
+        "tags": ["auth"]
       }
     },
     "/v1/auth/me": {
@@ -144,9 +134,7 @@
           }
         ],
         "summary": "Get current admin user",
-        "tags": [
-          "auth"
-        ]
+        "tags": ["auth"]
       }
     },
     "/v1/auth/register": {
@@ -180,9 +168,7 @@
           }
         },
         "summary": "Register admin user",
-        "tags": [
-          "auth"
-        ]
+        "tags": ["auth"]
       }
     },
     "/v1/auth/login": {
@@ -215,9 +201,7 @@
           }
         },
         "summary": "Login as admin",
-        "tags": [
-          "auth"
-        ]
+        "tags": ["auth"]
       }
     },
     "/v1/auth/update": {
@@ -255,9 +239,7 @@
           }
         ],
         "summary": "Update admin email or password",
-        "tags": [
-          "auth"
-        ]
+        "tags": ["auth"]
       }
     },
     "/v1/invoices": {
@@ -302,9 +284,7 @@
           }
         ],
         "summary": "Create invoice",
-        "tags": [
-          "invoices"
-        ]
+        "tags": ["invoices"]
       }
     },
     "/v1/invoices/{id}": {
@@ -345,9 +325,7 @@
           }
         ],
         "summary": "Get invoice by id",
-        "tags": [
-          "invoices"
-        ]
+        "tags": ["invoices"]
       }
     },
     "/v1/admin/wallet": {
@@ -360,10 +338,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "xmr",
-                "firo"
-              ]
+              "enum": ["xmr", "firo"]
             }
           }
         ],
@@ -388,9 +363,7 @@
           }
         ],
         "summary": "Get wallet info",
-        "tags": [
-          "admin"
-        ]
+        "tags": ["admin"]
       }
     },
     "/v1/admin/stats": {
@@ -403,10 +376,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "xmr",
-                "firo"
-              ]
+              "enum": ["xmr", "firo"]
             }
           }
         ],
@@ -431,9 +401,7 @@
           }
         ],
         "summary": "Get stats",
-        "tags": [
-          "admin"
-        ]
+        "tags": ["admin"]
       }
     },
     "/v1/admin/invoices": {
@@ -447,10 +415,7 @@
             "schema": {
               "default": "xmr",
               "type": "string",
-              "enum": [
-                "xmr",
-                "firo"
-              ]
+              "enum": ["xmr", "firo"]
             }
           },
           {
@@ -511,9 +476,7 @@
           }
         ],
         "summary": "List invoices",
-        "tags": [
-          "admin"
-        ]
+        "tags": ["admin"]
       }
     },
     "/v1/admin/payout": {
@@ -554,9 +517,7 @@
           }
         ],
         "summary": "Sweep full Spark balance to address",
-        "tags": [
-          "admin"
-        ]
+        "tags": ["admin"]
       }
     },
     "/v1/health/live": {
@@ -576,9 +537,7 @@
           }
         },
         "summary": "Liveness probe",
-        "tags": [
-          "health"
-        ]
+        "tags": ["health"]
       }
     },
     "/v1/health/ready": {
@@ -591,10 +550,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "xmr",
-                "firo"
-              ]
+              "enum": ["xmr", "firo"]
             }
           }
         ],
@@ -611,9 +567,7 @@
           }
         },
         "summary": "Readiness probe",
-        "tags": [
-          "health"
-        ]
+        "tags": ["health"]
       }
     },
     "/v1/health/synced": {
@@ -626,10 +580,7 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": [
-                "xmr",
-                "firo"
-              ]
+              "enum": ["xmr", "firo"]
             }
           }
         ],
@@ -646,9 +597,7 @@
           }
         },
         "summary": "Sync probe",
-        "tags": [
-          "health"
-        ]
+        "tags": ["health"]
       }
     }
   },
@@ -776,9 +725,7 @@
             "example": true
           }
         },
-        "required": [
-          "registered"
-        ]
+        "required": ["registered"]
       },
       "MeResponseDto": {
         "type": "object",
@@ -788,9 +735,7 @@
             "example": "admin@example.com"
           }
         },
-        "required": [
-          "email"
-        ]
+        "required": ["email"]
       },
       "RegisterDto": {
         "type": "object",
@@ -805,10 +750,7 @@
             "minLength": 8
           }
         },
-        "required": [
-          "email",
-          "password"
-        ]
+        "required": ["email", "password"]
       },
       "AccessTokenResponseDto": {
         "type": "object",
@@ -818,9 +760,7 @@
             "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
           }
         },
-        "required": [
-          "access_token"
-        ]
+        "required": ["access_token"]
       },
       "LoginDto": {
         "type": "object",
@@ -834,10 +774,7 @@
             "example": "strongpassword"
           }
         },
-        "required": [
-          "email",
-          "password"
-        ]
+        "required": ["email", "password"]
       },
       "UpdateDto": {
         "type": "object",
@@ -856,10 +793,7 @@
             "minLength": 8
           }
         },
-        "required": [
-          "email",
-          "password"
-        ]
+        "required": ["email", "password"]
       },
       "UpdateResponseDto": {
         "type": "object",
@@ -869,9 +803,7 @@
             "example": "admin@example.com"
           }
         },
-        "required": [
-          "email"
-        ]
+        "required": ["email"]
       },
       "CreateInvoiceDto": {
         "type": "object",
@@ -880,10 +812,7 @@
             "type": "string",
             "example": "xmr",
             "description": "Chain to create the invoice on",
-            "enum": [
-              "xmr",
-              "firo"
-            ]
+            "enum": ["xmr", "firo"]
           },
           "amountAtomic": {
             "type": "string",
@@ -922,10 +851,7 @@
             "additionalProperties": true
           }
         },
-        "required": [
-          "chain",
-          "amountAtomic"
-        ]
+        "required": ["chain", "amountAtomic"]
       },
       "InvoiceResponseDto": {
         "type": "object",
@@ -936,18 +862,12 @@
           },
           "chain": {
             "type": "string",
-            "enum": [
-              "xmr",
-              "firo"
-            ],
+            "enum": ["xmr", "firo"],
             "example": "xmr"
           },
           "asset": {
             "type": "string",
-            "enum": [
-              "xmr",
-              "firo"
-            ],
+            "enum": ["xmr", "firo"],
             "example": "xmr"
           },
           "assetDecimals": {
@@ -1067,10 +987,7 @@
         "properties": {
           "chain": {
             "type": "string",
-            "enum": [
-              "xmr",
-              "firo"
-            ],
+            "enum": ["xmr", "firo"],
             "example": "xmr"
           },
           "primaryAddress": {
@@ -1119,9 +1036,7 @@
             "example": 100
           }
         },
-        "required": [
-          "chain"
-        ]
+        "required": ["chain"]
       },
       "StatsResponseDto": {
         "type": "object",
@@ -1137,9 +1052,7 @@
             "description": "Wallet balance (Firo only)"
           }
         },
-        "required": [
-          "confirmedVolumeAtomic"
-        ]
+        "required": ["confirmedVolumeAtomic"]
       },
       "InvoiceListResponseDto": {
         "type": "object",
@@ -1163,12 +1076,7 @@
             "example": 20
           }
         },
-        "required": [
-          "data",
-          "total",
-          "page",
-          "limit"
-        ]
+        "required": ["data", "total", "page", "limit"]
       },
       "PayoutDto": {
         "type": "object",
@@ -1178,9 +1086,7 @@
             "example": "sm1wp..."
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       },
       "PayoutResponseDto": {
         "type": "object",
@@ -1190,9 +1096,7 @@
             "example": "aee3b507ef84950062776442942668b6..."
           }
         },
-        "required": [
-          "txid"
-        ]
+        "required": ["txid"]
       },
       "LiveResponseDto": {
         "type": "object",
@@ -1202,9 +1106,7 @@
             "example": "ok"
           }
         },
-        "required": [
-          "status"
-        ]
+        "required": ["status"]
       },
       "ReadyResponseDto": {
         "type": "object",
@@ -1212,10 +1114,7 @@
           "status": {
             "type": "string",
             "example": "ok",
-            "enum": [
-              "ok",
-              "degraded"
-            ]
+            "enum": ["ok", "degraded"]
           },
           "checks": {
             "type": "object",
@@ -1234,10 +1133,7 @@
             }
           }
         },
-        "required": [
-          "status",
-          "checks"
-        ]
+        "required": ["status", "checks"]
       },
       "SyncedResponseDto": {
         "type": "object",
@@ -1245,10 +1141,7 @@
           "status": {
             "type": "string",
             "example": "ok",
-            "enum": [
-              "ok",
-              "syncing"
-            ]
+            "enum": ["ok", "syncing"]
           },
           "walletHeight": {
             "type": "number",
@@ -1267,12 +1160,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "status",
-          "walletHeight",
-          "daemonHeight",
-          "behind"
-        ]
+        "required": ["status", "walletHeight", "daemonHeight", "behind"]
       }
     }
   }

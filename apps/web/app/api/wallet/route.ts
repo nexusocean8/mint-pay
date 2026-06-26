@@ -10,7 +10,6 @@ export async function GET(req: NextRequest) {
     const { data } = await getChainApi(chain).get('/admin/wallet', {
       params: { chain },
     });
-    console.log(data);
 
     return NextResponse.json(data);
   } catch {

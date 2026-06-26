@@ -3,13 +3,29 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
+  Badge,
+  Box,
+  Group,
+  Modal,
+  Pagination,
+  Paper,
+  Skeleton,
+  Stack,
+  Table,
+  Text,
+  Title,
+  UnstyledButton,
+} from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import {
   api,
   type Invoice,
   type InvoiceListResponse,
   type InvoiceStatus,
 } from '@/lib/api';
 import { useChain } from '@/lib/chain-context';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { CARD_BORDER, HEADING, MUTED, PRIMARY } from '@/lib/theme';
 
 const STATUSES: InvoiceStatus[] = [
   'pending',
@@ -19,15 +35,39 @@ const STATUSES: InvoiceStatus[] = [
   'expired',
   'cancelled',
 ];
+
 const LIMIT = 20;
 
-const STATUS_STYLES: Record<InvoiceStatus, string> = {
-  pending: 'bg-zinc-700 text-zinc-200',
-  seen: 'bg-blue-900 text-blue-300',
-  confirmed: 'bg-emerald-900 text-emerald-300',
-  underpaid: 'bg-yellow-900 text-yellow-300',
-  expired: 'bg-zinc-800 text-zinc-400',
-  cancelled: 'bg-red-900 text-red-300',
+const STATUS_COLORS: Record<
+  InvoiceStatus,
+  { color: string; bg: string; border: string }
+> = {
+  pending: {
+    color: 'var(--mantine-color-dark-1)',
+    bg: 'var(--mantine-color-dark-5)',
+    border: 'var(--mantine-color-dark-4)',
+  },
+  seen: {
+    color: '#93c5fd',
+    bg: 'rgba(96,165,250,0.1)',
+    border: 'rgba(96,165,250,0.25)',
+  },
+  confirmed: { color: PRIMARY, bg: `${PRIMARY}11`, border: `${PRIMARY}33` },
+  underpaid: {
+    color: '#fcd34d',
+    bg: 'rgba(251,191,36,0.1)',
+    border: 'rgba(251,191,36,0.25)',
+  },
+  expired: {
+    color: 'var(--mantine-color-dark-2)',
+    bg: 'var(--mantine-color-dark-6)',
+    border: 'var(--mantine-color-dark-4)',
+  },
+  cancelled: {
+    color: '#f87171',
+    bg: 'rgba(248,113,113,0.1)',
+    border: 'rgba(248,113,113,0.25)',
+  },
 };
 
 async function fetchInvoices(
@@ -53,11 +93,43 @@ function formatAtomic(
   return `${val} ${ticker.toUpperCase()}`;
 }
 
+function fmt(iso: string) {
+  return new Date(iso).toLocaleString(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+}
+
+function StatusBadge({ status }: { status: InvoiceStatus }) {
+  const s = STATUS_COLORS[status];
+  return (
+    <Text
+      style={{
+        display: 'inline-block',
+        fontSize: 10,
+        fontWeight: 700,
+        letterSpacing: '0.08em',
+        textTransform: 'uppercase',
+        color: s.color,
+        background: s.bg,
+        border: `1px solid ${s.border}`,
+        borderRadius: 4,
+        padding: '2px 8px',
+        fontFamily: HEADING,
+      }}
+    >
+      {status}
+    </Text>
+  );
+}
+
 export default function InvoicesPage() {
   const { chain } = useChain();
   const [status, setStatus] = useState<InvoiceStatus | null>(null);
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Invoice | null>(null);
+  const [detailOpened, { open: openDetail, close: closeDetail }] =
+    useDisclosure(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['invoices', chain, status, page],
@@ -71,144 +143,242 @@ export default function InvoicesPage() {
     setPage(1);
   }
 
+  function handleRowClick(inv: Invoice) {
+    setSelected(inv);
+    openDetail();
+  }
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-lg font-semibold text-zinc-100">Invoices</h1>
+    <Stack gap="xl">
+      {/* Header */}
+      <Title
+        order={2}
+        style={{ fontFamily: HEADING, letterSpacing: '-0.02em' }}
+      >
+        Invoices
+      </Title>
 
-      <div className="flex flex-wrap gap-2">
-        {STATUSES.map((s) => (
-          <button
-            key={s}
-            onClick={() => handleStatusFilter(s)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              status === s
-                ? STATUS_STYLES[s]
-                : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
+      {/* Status filters */}
+      <Group gap="xs">
+        {STATUSES.map((s) => {
+          const active = status === s;
+          const sc = STATUS_COLORS[s];
+          return (
+            <UnstyledButton
+              key={s}
+              onClick={() => handleStatusFilter(s)}
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                fontFamily: HEADING,
+                padding: '4px 12px',
+                borderRadius: 99,
+                border: `1px solid ${active ? sc.border : 'var(--mantine-color-dark-4)'}`,
+                color: active ? sc.color : MUTED,
+                background: active ? sc.bg : 'transparent',
+                transition: 'all 150ms ease',
+                cursor: 'pointer',
+              }}
+            >
+              {s}
+            </UnstyledButton>
+          );
+        })}
+      </Group>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-zinc-800 text-xs text-zinc-500">
-              <th className="px-4 py-3 text-left font-medium">ID</th>
-              <th className="px-4 py-3 text-left font-medium">Amount</th>
-              <th className="px-4 py-3 text-left font-medium">Status</th>
-              <th className="px-4 py-3 text-left font-medium">Created</th>
-              <th className="px-4 py-3 text-left font-medium">Expires</th>
-            </tr>
-          </thead>
-          <tbody>
+      {/* Table */}
+      <Paper
+        radius="sm"
+        style={{
+          background: 'var(--mantine-color-dark-7)',
+          border: `1px solid var(--mantine-color-dark-5)`,
+          overflow: 'hidden',
+        }}
+      >
+        <Table highlightOnHover>
+          <Table.Thead>
+            <Table.Tr
+              style={{ borderBottom: `1px solid var(--mantine-color-dark-5)` }}
+            >
+              {['ID', 'Amount', 'Status', 'Created', 'Expires'].map((h) => (
+                <Table.Th
+                  key={h}
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: MUTED,
+                    fontFamily: HEADING,
+                    padding: '12px 16px',
+                    borderBottom: 'none',
+                  }}
+                >
+                  {h}
+                </Table.Th>
+              ))}
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="border-b border-zinc-800">
+                <Table.Tr key={i}>
                   {Array.from({ length: 5 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3">
-                      <div
-                        className="h-3 bg-zinc-800 rounded animate-pulse"
-                        style={{ width: `${60 + (((i + j) * 7) % 30)}%` }}
+                    <Table.Td key={j} style={{ padding: '14px 16px' }}>
+                      <Skeleton
+                        height={12}
+                        width={`${60 + (((i + j) * 7) % 30)}%`}
+                        radius="sm"
                       />
-                    </td>
+                    </Table.Td>
                   ))}
-                </tr>
+                </Table.Tr>
               ))
             ) : data?.data.length === 0 ? (
-              <tr>
-                <td
+              <Table.Tr>
+                <Table.Td
                   colSpan={5}
-                  className="px-4 py-8 text-center text-zinc-500 text-sm"
+                  style={{ padding: '40px 16px', textAlign: 'center' }}
                 >
-                  No invoices found
-                </td>
-              </tr>
+                  <Text size="sm" c="dimmed">
+                    No invoices found
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
             ) : (
               data?.data.map((inv) => (
-                <tr
+                <Table.Tr
                   key={inv.id}
-                  onClick={() => setSelected(inv)}
-                  className="border-b border-zinc-800 last:border-0 hover:bg-zinc-800/50 cursor-pointer transition-colors"
+                  onClick={() => handleRowClick(inv)}
+                  style={{ cursor: 'pointer' }}
                 >
-                  <td className="px-4 py-3 font-mono text-xs text-zinc-400">
-                    {inv.id.slice(-8)}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-200">
-                    {formatAtomic(
-                      inv.amountAtomic,
-                      inv.assetDecimals,
-                      inv.asset,
-                    )}
-                    <span className="ml-2 text-xs text-zinc-500">
-                      {inv.amountFiat.toFixed(2)} {inv.fiatCurrency}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
+                  <Table.Td style={{ padding: '14px 16px' }}>
+                    <Text
+                      style={{
+                        fontFamily: HEADING,
+                        fontSize: 12,
+                        color: MUTED,
+                      }}
+                    >
+                      …{inv.id.slice(-8)}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td style={{ padding: '14px 16px' }}>
+                    <Group gap={8}>
+                      <Text size="sm" fw={600}>
+                        {formatAtomic(
+                          inv.amountAtomic,
+                          inv.assetDecimals,
+                          inv.asset,
+                        )}
+                      </Text>
+                      <Text style={{ fontSize: 11, color: MUTED }}>
+                        {inv.amountFiat.toFixed(2)} {inv.fiatCurrency}
+                      </Text>
+                    </Group>
+                  </Table.Td>
+                  <Table.Td style={{ padding: '14px 16px' }}>
                     <StatusBadge status={inv.status} />
-                  </td>
-                  <td className="px-4 py-3 text-zinc-400 text-xs">
-                    {fmt(inv.createdAt)}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-400 text-xs">
-                    {fmt(inv.expiresAt)}
-                  </td>
-                </tr>
+                  </Table.Td>
+                  <Table.Td style={{ padding: '14px 16px' }}>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: MUTED,
+                        fontFamily: HEADING,
+                      }}
+                    >
+                      {fmt(inv.createdAt)}
+                    </Text>
+                  </Table.Td>
+                  <Table.Td style={{ padding: '14px 16px' }}>
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: MUTED,
+                        fontFamily: HEADING,
+                      }}
+                    >
+                      {fmt(inv.expiresAt)}
+                    </Text>
+                  </Table.Td>
+                </Table.Tr>
               ))
             )}
-          </tbody>
-        </table>
-      </div>
+          </Table.Tbody>
+        </Table>
+      </Paper>
 
-      <div className="flex items-center justify-between text-xs text-zinc-500">
-        <span>{data ? `${data.total} total` : '—'}</span>
-        <div className="flex items-center gap-2">
-          <button
+      {/* Pagination */}
+      <Group justify="space-between">
+        <Text style={{ fontSize: 12, color: MUTED, fontFamily: HEADING }}>
+          {data ? `${data.total} total` : '—'}
+        </Text>
+        <Group gap={8}>
+          <UnstyledButton
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="p-1 rounded hover:text-zinc-200 disabled:opacity-30 transition-colors"
+            style={{
+              color: page === 1 ? 'var(--mantine-color-dark-3)' : MUTED,
+              cursor: page === 1 ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+            }}
           >
-            <ChevronLeft size={16} />
-          </button>
-          <span>
+            <IconChevronLeft size={16} />
+          </UnstyledButton>
+          <Text style={{ fontSize: 12, color: MUTED, fontFamily: HEADING }}>
             Page {page} of {totalPages}
-          </span>
-          <button
+          </Text>
+          <UnstyledButton
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="p-1 rounded hover:text-zinc-200 disabled:opacity-30 transition-colors"
+            style={{
+              color:
+                page === totalPages ? 'var(--mantine-color-dark-3)' : MUTED,
+              cursor: page === totalPages ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+            }}
           >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
+            <IconChevronRight size={16} />
+          </UnstyledButton>
+        </Group>
+      </Group>
 
-      {selected && (
-        <InvoiceDetail invoice={selected} onClose={() => setSelected(null)} />
-      )}
-    </div>
+      {/* Invoice detail modal */}
+      <Modal
+        opened={detailOpened}
+        onClose={closeDetail}
+        title={
+          <Text style={{ fontFamily: HEADING, fontSize: 13, fontWeight: 600 }}>
+            {'// Invoice Detail'}
+          </Text>
+        }
+        size="lg"
+        radius="sm"
+        styles={{
+          content: {
+            background: 'var(--mantine-color-dark-7)',
+            border: `1px solid ${CARD_BORDER}`,
+          },
+          header: {
+            background: 'var(--mantine-color-dark-7)',
+            borderBottom: `1px solid var(--mantine-color-dark-5)`,
+          },
+        }}
+      >
+        {selected && <InvoiceDetail invoice={selected} />}
+      </Modal>
+    </Stack>
   );
 }
 
-function StatusBadge({ status }: { status: InvoiceStatus }) {
-  return (
-    <span
-      className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[status]}`}
-    >
-      {status}
-    </span>
-  );
-}
-
-function InvoiceDetail({
-  invoice,
-  onClose,
-}: {
-  invoice: Invoice;
-  onClose: () => void;
-}) {
+function InvoiceDetail({ invoice }: { invoice: Invoice }) {
   const ticker = invoice.asset.toUpperCase();
+
   const rows: [string, string][] = [
     ['ID', invoice.id],
     ['Chain', invoice.chain],
@@ -231,7 +401,7 @@ function InvoiceDetail({
     ['Created', fmt(invoice.createdAt)],
     ['Expires', fmt(invoice.expiresAt)],
     ...(invoice.firstSeenAt
-      ? [['First seen', fmt(invoice.firstSeenAt)] as [string, string]]
+      ? [['First Seen', fmt(invoice.firstSeenAt)] as [string, string]]
       : []),
     ...(invoice.paidAt
       ? [['Paid', fmt(invoice.paidAt)] as [string, string]]
@@ -242,46 +412,42 @@ function InvoiceDetail({
   ];
 
   return (
-    <div
-      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
-      onClick={onClose}
-    >
-      <div
-        className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 w-full max-w-lg space-y-4"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-zinc-200">Invoice Detail</h2>
-          <button
-            onClick={onClose}
-            className="text-zinc-500 hover:text-zinc-200 transition-colors"
+    <Stack gap={0}>
+      {rows.map(([label, value]) => (
+        <Group
+          key={label}
+          gap="md"
+          py="xs"
+          style={{ borderBottom: `1px solid var(--mantine-color-dark-5)` }}
+          wrap="nowrap"
+          align="flex-start"
+        >
+          <Text
+            style={{
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              color: MUTED,
+              fontFamily: HEADING,
+              width: 120,
+              flexShrink: 0,
+            }}
           >
-            <X size={16} />
-          </button>
-        </div>
-        <div className="space-y-2">
-          {rows.map(([label, value]) => (
-            <div
-              key={label}
-              className="flex gap-4 py-1.5 border-b border-zinc-800 last:border-0"
-            >
-              <span className="text-xs text-zinc-500 w-32 shrink-0">
-                {label}
-              </span>
-              <span className="text-xs font-mono text-zinc-200 break-all">
-                {value}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+            {label}
+          </Text>
+          <Text
+            style={{
+              fontSize: 12,
+              fontFamily: HEADING,
+              color: 'var(--mantine-color-dark-0)',
+              wordBreak: 'break-all',
+            }}
+          >
+            {value}
+          </Text>
+        </Group>
+      ))}
+    </Stack>
   );
-}
-
-function fmt(iso: string) {
-  return new Date(iso).toLocaleString(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
 }

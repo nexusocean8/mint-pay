@@ -79,8 +79,6 @@ export class FiroService implements OnModuleInit {
     const raw =
       await this.client.call<Record<string, number>>('getsparkbalance');
 
-    this.log.debug(`Raw sparkbalance: ${JSON.stringify(raw)}`);
-
     return {
       availableBalance: raw['availableBalance'] ?? 0,
       unconfirmedBalance: raw['unconfirmedBalance'] ?? 0,

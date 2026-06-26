@@ -32,7 +32,6 @@ if (enabledChains.includes(Chain.Firo)) {
 }
 
 console.log('enabledChains from env:', enabledChains);
-console.log('chainModules count:', chainModules.length);
 
 @Module({
   imports: [

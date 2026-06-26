@@ -2,32 +2,41 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Alert,
+  Box,
+  Button,
+  Group,
+  NumberInput,
+  Paper,
+  Skeleton,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
+import { IconCheck } from '@tabler/icons-react';
+import axios, { isAxiosError } from 'axios';
 import { api, type Settings } from '@/lib/api';
 import { useChain } from '@/lib/chain-context';
-import axios from 'axios';
+import { HEADING, MUTED } from '@/lib/theme';
 
 const FIELDS: {
   key: keyof Settings;
   label: string;
-  labelEvm?: string;
   unit: string;
 }[] = [
-  { key: 'confirmationDepth', label: 'Confirmation depth', unit: 'blocks' },
+  { key: 'confirmationDepth', label: 'Confirmation Depth', unit: 'blocks' },
   {
     key: 'invoiceDefaultExpirySec',
-    label: 'Invoice default expiry',
+    label: 'Invoice Default Expiry',
     unit: 'seconds',
   },
-  { key: 'invoiceMaxExpirySec', label: 'Invoice max expiry', unit: 'seconds' },
-  { key: 'scannerLockTtlMs', label: 'Scanner lock TTL', unit: 'ms' },
-  {
-    key: 'syncedThresholdBlocks',
-    label: 'Sync threshold',
-    unit: 'blocks',
-  },
-  { key: 'rateCacheTtlMs', label: 'Rate cache TTL', unit: 'ms' },
-  { key: 'webhookMaxAttempts', label: 'Webhook max attempts', unit: 'retries' },
-  { key: 'webhookTimeoutMs', label: 'Webhook timeout', unit: 'ms' },
+  { key: 'invoiceMaxExpirySec', label: 'Invoice Max Expiry', unit: 'seconds' },
+  { key: 'scannerLockTtlMs', label: 'Scanner Lock TTL', unit: 'ms' },
+  { key: 'syncedThresholdBlocks', label: 'Sync Threshold', unit: 'blocks' },
+  { key: 'rateCacheTtlMs', label: 'Rate Cache TTL', unit: 'ms' },
+  { key: 'webhookMaxAttempts', label: 'Webhook Max Attempts', unit: 'retries' },
+  { key: 'webhookTimeoutMs', label: 'Webhook Timeout', unit: 'ms' },
 ];
 
 function fetchSettings(chain: string): Promise<Settings> {
@@ -37,10 +46,12 @@ function fetchSettings(chain: string): Promise<Settings> {
 export default function SettingsPage() {
   const { chain } = useChain();
   const queryClient = useQueryClient();
+
   const { data, isLoading } = useQuery({
     queryKey: ['settings', chain],
     queryFn: () => fetchSettings(chain),
   });
+
   const [draft, setDraft] = useState<Settings | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -61,65 +72,144 @@ export default function SettingsPage() {
     },
     onError: (err) => {
       setSaveError(
-        axios.isAxiosError(err)
+        isAxiosError(err)
           ? (err.response?.data?.message ?? 'Failed to save')
           : 'Failed to save',
       );
     },
   });
 
-  function handleChange(key: keyof Settings, raw: string) {
-    const value = parseInt(raw, 10);
-    if (isNaN(value)) return;
-    setDraft((prev) => (prev ? { ...prev, [key]: value } : prev));
+  function handleChange(key: keyof Settings, value: string | number) {
+    const num = typeof value === 'string' ? parseInt(value, 10) : value;
+    if (isNaN(num)) return;
+    setDraft((prev) => (prev ? { ...prev, [key]: num } : prev));
   }
 
-  if (isLoading || !draft)
-    return <p className="text-sm text-zinc-500">Loading…</p>;
+  if (isLoading || !draft) {
+    return (
+      <Stack gap="xl">
+        <Skeleton height={28} width={160} radius="sm" />
+        <Skeleton height={320} radius="sm" />
+      </Stack>
+    );
+  }
 
   const dirty = JSON.stringify(draft) !== JSON.stringify(data);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-zinc-100">Settings</h1>
-        <div className="flex items-center gap-3">
-          {saveError && <p className="text-xs text-red-400">{saveError}</p>}
-          {saved && <p className="text-xs text-emerald-400">Saved</p>}
-          <button
-            onClick={() => mutation.mutate(draft)}
-            disabled={!dirty || mutation.isPending}
-            className="px-4 py-1.5 text-sm bg-green-500 hover:bg-green-400 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-md transition-colors"
+    <Box maw={640}>
+      <Stack gap="xl">
+        {/* Header */}
+        <Group justify="space-between" align="center">
+          <Title
+            order={2}
+            style={{ fontFamily: HEADING, letterSpacing: '-0.02em' }}
           >
-            {mutation.isPending ? 'Saving…' : 'Save'}
-          </button>
-        </div>
-      </div>
+            Settings
+          </Title>
+          <Group gap="sm" align="center">
+            {saveError && (
+              <Alert
+                color="red"
+                radius="sm"
+                p="xs"
+                styles={{ message: { fontSize: 12 } }}
+              >
+                {saveError}
+              </Alert>
+            )}
+            {saved && (
+              <Group gap={4}>
+                <IconCheck size={13} color="var(--mantine-color-green-5)" />
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: 'var(--mantine-color-green-5)',
+                    fontFamily: HEADING,
+                  }}
+                >
+                  Saved
+                </Text>
+              </Group>
+            )}
+            <Button
+              onClick={() => mutation.mutate(draft)}
+              disabled={!dirty || mutation.isPending}
+              loading={mutation.isPending}
+              size="sm"
+              color="brand"
+              style={{ fontFamily: HEADING }}
+            >
+              {mutation.isPending ? 'Saving…' : 'Save'}
+            </Button>
+          </Group>
+        </Group>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg divide-y divide-zinc-800">
-        {FIELDS.map(({ key, label, unit }) => {
-          const fieldLabel =
-            key === 'syncedThresholdBlocks' && chain !== 'xmr'
-              ? 'Sync threshold'
-              : label;
-          return (
-            <div key={key} className="flex items-center gap-4 px-5 py-3">
-              <label className="text-sm text-zinc-300 w-52 shrink-0">
-                {fieldLabel}
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
+        {/* Fields */}
+        <Paper
+          radius="sm"
+          style={{
+            background: 'var(--mantine-color-dark-7)',
+            border: `1px solid var(--mantine-color-dark-5)`,
+            overflow: 'hidden',
+          }}
+        >
+          {FIELDS.map(({ key, label, unit }, i) => (
+            <Box
+              key={key}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 20px',
+                borderBottom:
+                  i < FIELDS.length - 1
+                    ? '1px solid var(--mantine-color-dark-5)'
+                    : 'none',
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: 'var(--mantine-color-dark-0)',
+                  fontFamily: HEADING,
+                  width: 220,
+                  flexShrink: 0,
+                }}
+              >
+                {label}
+              </Text>
+              <Group gap="sm" align="center">
+                <NumberInput
                   value={draft[key]}
-                  onChange={(e) => handleChange(key, e.target.value)}
-                  className="w-36 bg-zinc-800 border border-zinc-700 rounded-md px-3 py-1.5 text-sm font-mono text-zinc-100 focus:outline-none focus:border-green-400 transition-colors"
+                  onChange={(v) => handleChange(key, v)}
+                  min={0}
+                  hideControls
+                  size="xs"
+                  styles={{
+                    input: {
+                      width: 120,
+                      fontFamily: HEADING,
+                      fontSize: 12,
+                      textAlign: 'right',
+                    },
+                  }}
                 />
-                <span className="text-xs text-zinc-500">{unit}</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color: MUTED,
+                    fontFamily: HEADING,
+                    width: 52,
+                  }}
+                >
+                  {unit}
+                </Text>
+              </Group>
+            </Box>
+          ))}
+        </Paper>
+      </Stack>{' '}
+    </Box>
   );
 }
